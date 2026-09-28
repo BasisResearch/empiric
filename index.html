@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EMPIRIC: Experiment-Driven Learning of Residual World Models for Robot Planning</title>
+<meta name="description" content="EMPIRIC extends a physics engine with code for the physics it is missing, infers that code's parameters from a few noisy experiments, and plans with the result.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="EMPIRIC: Experiment-Driven Learning of Residual World Models for Robot Planning">
+<meta property="og:description" content="EMPIRIC extends a physics engine with code for the physics it is missing, infers that code's parameters from a few noisy experiments, and plans with the result.">
+<meta property="og:url" content="https://yichao-liang.github.io/empiric/">
+<meta property="og:image" content="https://yichao-liang.github.io/empiric/assets/img/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23201a33'/%3E%3Cpath d='M10 8h12v3.5h-8v3h7v3.5h-7v3h8V24H10z' fill='%23c9b6f0'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <a class="wordmark" href="#top">EMPIRIC</a>
+  <nav class="nav-sections" aria-label="Sections">
+    <a href="#overview">Overview</a>
+    <a href="#videos">Videos</a>
+    <a href="#method">Method</a>
+    <a href="#program">Program</a>
+    <a href="#results">Results</a>
+    <a href="#robot">Robot</a>
+    <a href="#citation">Citation</a>
+  </nav>
+  <div class="nav-links">
+    <a class="nav-button" href="https://arxiv.org/" data-arxiv aria-disabled="true">arXiv</a>
+    <a class="nav-button" href="https://github.com/BasisResearch/predicators">Code</a>
+  </div>
+</header>
+
+<main id="main">
+<section class="hero" id="top" aria-labelledby="title">
+  <div class="hero-inner">
+    <h1 id="title"><span class="accent">EMPIRIC</span>: Experiment-Driven Learning of Residual World Models for Robot Planning</h1>
+    <div class="hero-grid">
+      <div class="hero-text">
+        <ul class="authors" aria-label="Authors">
+          <li>Yichao Liang<sup>1,2</sup></li>
+          <li>Amber Li<sup>1,5</sup></li>
+          <li>Dat Nguyen<sup>1,6*</sup></li>
+          <li>Emily Bunnapradist<sup>1*</sup></li>
+          <li>Michelangelo Naim<sup>1*</sup></li>
+          <li>Sreela Kodali<sup>1*</sup></li>
+          <li>Matteo Merler<sup>7</sup></li>
+          <li>Bowen Li<sup>5</sup></li>
+          <li>Kiran Gopinathan<sup>1</sup></li>
+          <li>Yiyun Liu<sup>1</sup></li>
+          <li>Nikhil Pimpalkhare<sup>1</sup></li>
+          <li>Joshua B. Tenenbaum<sup>8</sup></li>
+          <li>Adrian Weller<sup>2,9</sup></li>
+          <li>Zenna Tavares<sup>1</sup></li>
+          <li>Tom Silver<sup>3&dagger;</sup></li>
+          <li>Kevin Ellis<sup>4&dagger;</sup></li>
+        </ul>
+        <ul class="affiliations" aria-label="Affiliations">
+          <li><sup>1</sup>Basis Research Institute</li>
+          <li><sup>2</sup>University of Cambridge</li>
+          <li><sup>3</sup>Princeton University</li>
+          <li><sup>4</sup>Cornell University</li>
+          <li><sup>5</sup>Carnegie Mellon University</li>
+          <li><sup>6</sup>Harvard University</li>
+          <li><sup>7</sup>Fondazione Bruno Kessler</li>
+          <li><sup>8</sup>Massachusetts Institute of Technology</li>
+          <li><sup>9</sup>The Alan Turing Institute</li>
+        </ul>
+        <p class="equal"><sup>*,&dagger;</sup>Equal contribution</p>
+        <p class="hero-summary">EMPIRIC extends a physics engine with code for the physics it is missing, infers that code's parameters from a few noisy experiments, and plans with the result.</p>
+        <div class="hero-actions">
+          <a class="button" href="https://arxiv.org/" data-arxiv aria-disabled="true">Paper <span class="button-note">arXiv</span></a>
+          <a class="button" href="https://github.com/BasisResearch/predicators">Code <span class="button-note">GitHub</span></a>
+          <a class="button ghost" href="#videos">Videos <span aria-hidden="true">&darr;</span></a>
+        </div>
+      </div>
+      <figure class="hero-media">
+        <video id="hero-video" muted loop playsinline preload="auto" poster="assets/video/hero.webp" width="720" height="720" aria-label="The final seconds of the test task in each domain">
+          <source src="assets/video/hero.mp4" type="video/mp4">
+        </video>
+        <figcaption><span id="hero-domain">Domino</span>: the last seconds of a recorded test task</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="overview" aria-labelledby="overview-title">
+  <div class="section-heading">
+    <h2 id="overview-title">Learning missing physics as code</h2>
+    <div class="lead">
+      <p>A robot should be able to learn through experiments how unfamiliar objects behave and interact, then plan with that knowledge. It need not start from scratch: physics engines supply knowledge of motion and contact, but can omit entire <em>mechanisms</em>, such as glue curing, water heating, or wind.</p>
+      <p>We present EMPIRIC, an agent that learns a <em>residual world model</em>: a physics engine extended with code for the missing mechanisms. The learned programs can introduce new forces, constraints, and hidden state, and Bayesian inference estimates their parameters and states from noisy observations. The resulting model lets the agent predict the outcomes of actions, choose informative experiments, and revise its hypotheses when predictions fail.</p>
+      <p>Across five simulated domains, EMPIRIC learns interpretable, reusable models, and solves more tasks with fewer environment interactions than all three baselines. On a physical robot, it learns wind forces and domino masses to solve a manipulation task.</p>
+    </div>
+  </div>
+  <figure class="figure">
+    <img src="assets/img/teaser.webp" width="2200" height="1323" alt="Top: a base simulator without glue predicts that lifting one glued block leaves its partner behind; the agent writes glue into a simulator program and plans with it. Bottom: initial and final scenes from test episodes in Domino, Bridge, Balloons, Boil, Fan and on a real robot.">
+    <figcaption><strong>Learning missing physics as code.</strong> <em>Top:</em> in Bridge, lifting one block of a glued pair also lifts its partner, which a base simulator without glue does not predict; the agent writes the glue into a simulator program, infers its parameters, and plans with it. The lift images and code are illustrative. <em>Bottom:</em> initial and final scenes from successful EMPIRIC test episodes in five simulated domains and on a real robot; each domain has mechanisms or parameters that the agent must learn.</figcaption>
+  </figure>
+</section>
+
+<section class="band" id="videos" aria-labelledby="videos-title">
+  <div class="section">
+    <div class="section-heading">
+      <h2 id="videos-title">Recorded runs</h2>
+      <div class="lead">
+        <p>Each video is one complete EMPIRIC run, as the evaluation harness recorded it: the training tasks, where the agent experiments, then the test task. The panel beside the scene shows the goal, the skill the agent is running with the reason it gave, and the steps used so far.</p>
+      </div>
+    </div>
+    <div class="toolbar">
+      <label for="speed">Playback speed</label>
+      <select id="speed">
+        <option value="1">1&times;</option>
+        <option value="2" selected>2&times;</option>
+        <option value="4">4&times;</option>
+        <option value="8">8&times;</option>
+      </select>
+    </div>
+    <div class="video-grid">
+      <article class="video-card">
+        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/domino.webp" width="1520" height="900">
+          <source src="assets/video/domino.mp4" type="video/mp4">
+        </video>
+        <div class="video-text">
+          <h3>Domino</h3>
+          <p>Arrange blue dominoes so that pushing the green domino topples the purple one, using as few blue dominoes as possible. Poses are noisy, and friction is unknown. At test, the green and purple dominoes stand at right angles, so the cascade has to turn.</p>
+          <p class="learned">The agent fits friction 0.50 to the training cascade, up from the base simulator's 0.10. In its model, two blue dominoes turn the chain through 90&deg; in every rollout before the test chain is built.</p>
+        </div>
+      </article>
+      <article class="video-card">
+        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/bridge.webp" width="1520" height="900">
+          <source src="assets/video/bridge.mp4" type="video/mp4">
+        </video>
+        <div class="video-text">
+          <h3>Bridge</h3>
+          <p>Glue blocks into an n-shaped bridge across two marked sites. Poses are noisy, and bonds and cure progress are hidden. The test span has four blocks, one more than in training.</p>
+          <p class="learned">The agent's experiments show how glue bonds. It writes the glue program <a href="#program">shown below</a> and builds the four-block span.</p>
+        </div>
+      </article>
+      <article class="video-card">
+        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/balloons.webp" width="1520" height="900">
+          <source src="assets/video/balloons.mp4" type="video/mp4">
+        </video>
+        <div class="video-text">
+          <h3>Balloons</h3>
+          <p>Release balloons tied to a box so that it settles within a target height band. A freed balloon cannot be clipped back, and one that reaches the ceiling bursts. The test band is the highest, with four balloons on the rack.</p>
+          <p class="learned">The agent's experiments show that lift fades with height.</p>
+        </div>
+      </article>
+      <article class="video-card">
+        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/boil.webp" width="1520" height="900">
+          <source src="assets/video/boil.mp4" type="video/mp4">
+        </video>
+        <div class="video-text">
+          <h3>Boil</h3>
+          <p>Fill jugs with water, boil them without spilling, then turn the burner off. The base simulator neither fills nor heats the jugs. At test, two jugs must boil.</p>
+          <p class="learned">Water from the tap lands in front of the drawn spout, and a jug placed on the puddle fills at a rate the agent measures. The model predicts that overlapping filling and boiling brings both jugs to a boil without a spill, as happens in the test episode.</p>
+        </div>
+      </article>
+      <article class="video-card">
+        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/fan.webp" width="1520" height="900">
+          <source src="assets/video/fan.mp4" type="video/mp4">
+        </video>
+        <div class="video-text">
+          <h3>Fan</h3>
+          <p>Switch fans to bring a ball to rest at a target. The ball's position is noisy, and airflow and drag must be learned. The test target sits at a new position.</p>
+          <p class="learned">A fan burst rolls the ball 0.9&nbsp;m. In the model, the ball stalls on a lip that noisy platform heights created, which the agent removes; its push, brake and blow plan then stops the ball 6&nbsp;mm from the predicted spot in the test episode.</p>
+        </div>
+      </article>
+    </div>
+    <h3 class="subheading">The same runs in the paper</h3>
+    <p class="subtext">The paper's figures show these runs as frames in time order. The purple bar marks where the agent writes its simulator program and infers its parameters; dashed frames show what the agent's world model predicts for a plan.</p>
+    <figure class="figure">
+      <img src="assets/img/runs.webp" width="2200" height="1197" loading="lazy" alt="Frames from recorded runs in Bridge, Balloons and on the real robot, from the first experiments to the solved test task, with dashed frames for model predictions.">
+      <figcaption><strong>Recorded EMPIRIC runs from exploring to solving.</strong> <em>Top:</em> in Bridge, the goal is to glue blocks into a bridge across two supports; the agent's experiments show how glue bonds. <em>Middle:</em> in Balloons, the goal is to release balloons so that the box settles in a target height band; the agent's experiments show that lift fades with height. <em>Bottom:</em> on the real robot, the test goal is to land the green domino in the pink patch; the fan cannot move the green domino, so the agent stands the gray one upwind to knock it in.</figcaption>
+    </figure>
+    <figure class="figure">
+      <img src="assets/img/runs-appendix.webp" width="2200" height="1229" loading="lazy" alt="Frames from recorded runs in Domino, Boil and Fan, from the first experiments to the solved test task, with dashed frames for model predictions.">
+      <figcaption><strong>Recorded EMPIRIC runs in Domino, Boil, and Fan.</strong> In Domino, the agent adds no mechanism and fits only the base simulator's parameters.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section" id="method" aria-labelledby="method-title">
+  <div class="section-heading">
+    <h2 id="method-title">How EMPIRIC learns and plans</h2>
+    <div class="lead">
+      <p>A coding agent starts from a base simulator of generic rigid-body physics and extends it with code for novel physical mechanisms. The engine provides reusable knowledge of motion and contact, so learning can focus on the physics it lacks.</p>
+    </div>
+  </div>
+  <figure class="figure">
+    <img src="assets/img/method.webp" width="2200" height="1256" loading="lazy" alt="The learning and planning loop in a Bridge run: the agent experiments, writes a residual program for glue, infers its parameters, and plans with the extended simulator.">
+    <figcaption><strong>Learning and planning during a continual run.</strong> In this Bridge example, the agent learns how glue bonds touching blocks after an unknown cure time. The loop is schematic: steps may repeat or occur in a different order.</figcaption>
+  </figure>
+  <div class="cards three">
+    <article>
+      <h3>Residual world model</h3>
+      <p>The agent writes a program that subclasses the physics engine and adds what it lacks: forces, constraints, and quantities such as water volume, temperature, or a glued joint's cure progress.</p>
+    </article>
+    <article>
+      <h3>Belief over parameters and state</h3>
+      <p>From noisy observations, the agent infers a belief over the program's parameters and the current state, including the hidden quantities the program tracks.</p>
+    </article>
+    <article>
+      <h3>Planning and experiments</h3>
+      <p>The agent simulates candidate plans under draws from this belief and executes the plan most likely to succeed. When an uncertain quantity decides the outcome, it runs an experiment first, and when execution contradicts the model, it revises the program.</p>
+    </article>
+  </div>
+</section>
+
+<section class="band" id="program" aria-labelledby="program-title">
+  <div class="section">
+    <div class="section-heading">
+      <h2 id="program-title">A program the agent wrote</h2>
+      <div class="lead">
+        <p>In the Bridge run above, the agent wrote this glue model after a few probes. Its docstring records what the probes showed, its parameters are fitted to the recorded block poses, and its cure step turns two glued, touching end faces into a rigid weld in the engine.</p>
+      </div>
+    </div>
+    <div class="code-card">
+      <div class="code-head"><span>simulator.py</span><span class="code-note">excerpt, unedited</span></div>
+      <pre class="code"><code><!-- code:excerpt --><span class="ln">1</span><span class="sd">&quot;&quot;&quot;Glue-and-weld dynamics for the n-shaped-bridge environment.</span>
+<span class="ln">2</span>
+<span class="ln">3</span><span class="sd">Mechanism inferred from real probes on level 1 (see ./journal.md section 2):</span>
+<span class="ln">4</span>
+<span class="ln">5</span><span class="sd">* The bottle is a glue dispenser with a downward nozzle at (bx, by, bz - nozzle_drop).</span>
+<span class="ln">6</span><span class="sd">  Glue is deposited on the upward-facing surface underneath the nozzle only; bringing the</span>
+<span class="ln">7</span><span class="sd">  bottle alongside a vertical face does nothing (measured at 0.033 m and 0.012 m standoff).</span>
+<span class="ln">8</span><span class="sd">* Which named face receives the glue depends on where over the block the nozzle sits.</span>
+<span class="ln">9</span><span class="sd">  Over the middle of the up-facing area -&gt; `glue_top`; over the +x/-x end region -&gt;</span>
+<span class="ln">10</span><span class="sd">  `glue_end_b` / `glue_end_a`.  For a block standing on end (pitch = -pi/2) the up-facing</span>
+<span class="ln">11</span><span class="sd">  area IS an end face, so that end is the one that gets glued.</span>
+<span class="ln">12</span><span class="sd">* Glue is a level that ramps up while the nozzle is held in place (observed 0 -&gt; 0.2 -&gt; 0.4</span>
+<span class="ln">13</span><span class="sd">  -&gt; 1.0 over the ~4-action dwell that MoveTo performs at its target).</span>
+<span class="ln">14</span><span class="sd">* Two blocks whose opposing end faces come into contact, with glue on them, fuse into one</span>
+<span class="ln">15</span><span class="sd">  rigid body and BOTH glue levels are consumed (observed 1.0 -&gt; 0.0 at the weld instant).</span>
+<span class="ln">16</span><span class="sd">  Observed welds formed on real contact, not merely on being placed 1.3 mm apart.</span>
+<span class="ln">17</span>
+<span class="ln">18</span><span class="sd">Glue levels and welds live in model memory (observation-driven); the welds are realised in</span>
+<span class="ln">19</span><span class="sd">the engine through `restore_model_attachments`, which is what makes a welded assembly move</span>
+<span class="ln">20</span><span class="sd">and collision-check as one held body.</span>
+<span class="ln">21</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="gap">⋮</span>
+<span class="ln">112</span><span class="k">class</span><span class="w"> </span><span class="nc">BridgeGlueWeld</span><span class="p">(</span><span class="n">BaseSimulator</span><span class="p">):</span>  <span class="c1"># noqa: F821  (injected by the loader)</span>
+<span class="ln">113</span>
+<span class="ln">114</span>    <span class="n">AGENT_PARAM_SPECS</span> <span class="o">=</span> <span class="p">[</span>
+<span class="ln">115</span>        <span class="c1"># how fast a held nozzle deposits glue (level per action)</span>
+<span class="ln">116</span>        <span class="c1"># directly observed on level 1: the reading stepped 0 -&gt; 0.2 -&gt; 0.4 -&gt; 1.0, so the</span>
+<span class="ln">117</span>        <span class="c1"># per-action deposit is ~0.2; the bounds keep the pose-residual fit from running away</span>
+<span class="ln">118</span>        <span class="c1"># to a degenerate value that the pose data cannot actually see.</span>
+<span class="ln">119</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;glue_rate&quot;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.6</span><span class="p">),</span>
+<span class="ln">120</span>        <span class="c1"># lateral slop around the up-facing area that still catches the dab</span>
+<span class="ln">121</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;dab_radius&quot;</span><span class="p">,</span> <span class="mf">0.015</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.002</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">),</span>
+<span class="ln">122</span>        <span class="c1"># how far above the surface the nozzle may sit and still deposit</span>
+<span class="ln">123</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;dab_height&quot;</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.002</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.06</span><span class="p">),</span>
+<span class="ln">124</span>        <span class="c1"># fraction of the half-length beyond which a dab counts as an end, not the top</span>
+<span class="ln">125</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;end_frac&quot;</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.95</span><span class="p">),</span>
+<span class="ln">126</span>        <span class="c1"># largest face-to-face gap that still cures into a weld</span>
+<span class="ln">127</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;weld_gap&quot;</span><span class="p">,</span> <span class="mf">0.006</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.025</span><span class="p">),</span>
+<span class="ln">128</span>        <span class="c1"># largest lateral (off-axis) offset of two mating end faces that still cures</span>
+<span class="ln">129</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;weld_lateral&quot;</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.045</span><span class="p">),</span>
+<span class="ln">130</span>        <span class="c1"># glue level required before a contact cures</span>
+<span class="ln">131</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;cure_level&quot;</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.9</span><span class="p">),</span>
+<span class="ln">132</span>        <span class="c1"># nozzle offset below the bottle origin</span>
+<span class="ln">133</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;nozzle_drop&quot;</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">),</span>
+<span class="ln">134</span>    <span class="p">]</span>
+<span class="ln">135</span>
+<span class="ln">136</span>    <span class="c1"># Scored quantities: the block poses, which is what the welds actually change.</span>
+<span class="ln">137</span>    <span class="n">RESIDUAL_FEATURES</span> <span class="o">=</span> <span class="p">{</span><span class="n">BLOCK_TYPE</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;roll&quot;</span><span class="p">,</span> <span class="s2">&quot;pitch&quot;</span><span class="p">,</span> <span class="s2">&quot;yaw&quot;</span><span class="p">]}</span>
+<span class="ln">138</span>
+<span class="ln">139</span>    <span class="n">MODEL_STATE_INIT</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;glue&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;welds&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;seen&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<span class="gap">⋮</span>
+<span class="ln">210</span>        <span class="c1"># 3. cure: opposing end faces in contact with glue on both fuse, consuming the glue.</span>
+<span class="ln">211</span>        <span class="n">names</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+<span class="ln">212</span>        <span class="n">existing</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">welds</span><span class="p">}</span>
+<span class="ln">213</span>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+<span class="ln">214</span>            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">names</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]:</span>
+<span class="ln">215</span>                <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)))</span> <span class="ow">in</span> <span class="n">existing</span><span class="p">:</span>
+<span class="ln">216</span>                    <span class="k">continue</span>
+<span class="ln">217</span>                <span class="k">for</span> <span class="n">fa</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;end_a&quot;</span><span class="p">,</span> <span class="s2">&quot;end_b&quot;</span><span class="p">):</span>
+<span class="ln">218</span>                    <span class="n">pa</span><span class="p">,</span> <span class="n">na</span> <span class="o">=</span> <span class="n">_end_point</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">fa</span><span class="p">)</span>
+<span class="ln">219</span>                    <span class="k">for</span> <span class="n">fb</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;end_a&quot;</span><span class="p">,</span> <span class="s2">&quot;end_b&quot;</span><span class="p">):</span>
+<span class="ln">220</span>                        <span class="n">pb</span><span class="p">,</span> <span class="n">nb</span> <span class="o">=</span> <span class="n">_end_point</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">b</span><span class="p">],</span> <span class="n">fb</span><span class="p">)</span>
+<span class="ln">221</span>                        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">na</span> <span class="o">@</span> <span class="n">nb</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">:</span>      <span class="c1"># faces must oppose</span>
+<span class="ln">222</span>                            <span class="k">continue</span>
+<span class="ln">223</span>                        <span class="n">delta</span> <span class="o">=</span> <span class="n">pb</span> <span class="o">-</span> <span class="n">pa</span>
+<span class="ln">224</span>                        <span class="n">gap</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">delta</span> <span class="o">@</span> <span class="n">na</span><span class="p">))</span>
+<span class="ln">225</span>                        <span class="n">lateral</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta</span> <span class="o">-</span> <span class="p">(</span><span class="n">delta</span> <span class="o">@</span> <span class="n">na</span><span class="p">)</span> <span class="o">*</span> <span class="n">na</span><span class="p">))</span>
+<span class="ln">226</span>                        <span class="k">if</span> <span class="n">gap</span> <span class="o">&gt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;weld_gap&quot;</span><span class="p">]:</span>
+<span class="ln">227</span>                            <span class="k">continue</span>
+<span class="ln">228</span>                        <span class="k">if</span> <span class="n">lateral</span> <span class="o">&gt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;weld_lateral&quot;</span><span class="p">]:</span>
+<span class="ln">229</span>                            <span class="k">continue</span>
+<span class="ln">230</span>                        <span class="k">if</span> <span class="p">(</span><span class="n">glue</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">fa</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cure_level&quot;</span><span class="p">]</span>
+<span class="ln">231</span>                                <span class="ow">or</span> <span class="n">glue</span><span class="p">[</span><span class="n">b</span><span class="p">][</span><span class="n">fb</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cure_level&quot;</span><span class="p">]):</span>
+<span class="ln">232</span>                            <span class="k">continue</span>
+<span class="ln">233</span>                        <span class="n">welds</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+<span class="ln">234</span>                        <span class="n">existing</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))))</span>
+<span class="ln">235</span>                        <span class="n">glue</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">fa</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="ln">236</span>                        <span class="n">glue</span><span class="p">[</span><span class="n">b</span><span class="p">][</span><span class="n">fb</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="ln">237</span>                        <span class="k">break</span>
+<span class="ln">238</span>                    <span class="k">else</span><span class="p">:</span>
+<span class="ln">239</span>                        <span class="k">continue</span>
+<span class="ln">240</span>                    <span class="k">break</span>
+<span class="ln">241</span>        <span class="n">model_state</span><span class="p">[</span><span class="s2">&quot;seen&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><!-- /code:excerpt --></code></pre>
+    </div>
+    <details class="code-full">
+      <summary>Show the whole program (290 lines)</summary>
+      <div class="code-card">
+        <div class="code-head"><span>simulator.py</span><a class="code-note" href="assets/code/bridge_simulator.py">Download</a></div>
+        <pre class="code"><code><!-- code:full --><span class="ln">1</span><span class="sd">&quot;&quot;&quot;Glue-and-weld dynamics for the n-shaped-bridge environment.</span>
+<span class="ln">2</span>
+<span class="ln">3</span><span class="sd">Mechanism inferred from real probes on level 1 (see ./journal.md section 2):</span>
+<span class="ln">4</span>
+<span class="ln">5</span><span class="sd">* The bottle is a glue dispenser with a downward nozzle at (bx, by, bz - nozzle_drop).</span>
+<span class="ln">6</span><span class="sd">  Glue is deposited on the upward-facing surface underneath the nozzle only; bringing the</span>
+<span class="ln">7</span><span class="sd">  bottle alongside a vertical face does nothing (measured at 0.033 m and 0.012 m standoff).</span>
+<span class="ln">8</span><span class="sd">* Which named face receives the glue depends on where over the block the nozzle sits.</span>
+<span class="ln">9</span><span class="sd">  Over the middle of the up-facing area -&gt; `glue_top`; over the +x/-x end region -&gt;</span>
+<span class="ln">10</span><span class="sd">  `glue_end_b` / `glue_end_a`.  For a block standing on end (pitch = -pi/2) the up-facing</span>
+<span class="ln">11</span><span class="sd">  area IS an end face, so that end is the one that gets glued.</span>
+<span class="ln">12</span><span class="sd">* Glue is a level that ramps up while the nozzle is held in place (observed 0 -&gt; 0.2 -&gt; 0.4</span>
+<span class="ln">13</span><span class="sd">  -&gt; 1.0 over the ~4-action dwell that MoveTo performs at its target).</span>
+<span class="ln">14</span><span class="sd">* Two blocks whose opposing end faces come into contact, with glue on them, fuse into one</span>
+<span class="ln">15</span><span class="sd">  rigid body and BOTH glue levels are consumed (observed 1.0 -&gt; 0.0 at the weld instant).</span>
+<span class="ln">16</span><span class="sd">  Observed welds formed on real contact, not merely on being placed 1.3 mm apart.</span>
+<span class="ln">17</span>
+<span class="ln">18</span><span class="sd">Glue levels and welds live in model memory (observation-driven); the welds are realised in</span>
+<span class="ln">19</span><span class="sd">the engine through `restore_model_attachments`, which is what makes a welded assembly move</span>
+<span class="ln">20</span><span class="sd">and collision-check as one held body.</span>
+<span class="ln">21</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="ln">22</span>
+<span class="ln">23</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>  <span class="c1"># noqa: F401  (also pre-injected)</span>
+<span class="ln">24</span>
+<span class="ln">25</span><span class="kn">from</span><span class="w"> </span><span class="nn">predicators.code_sim_learning.fit_space</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParamSpec</span>
+<span class="ln">26</span>
+<span class="ln">27</span><span class="n">BLOCK_TYPE</span> <span class="o">=</span> <span class="s2">&quot;block&quot;</span>
+<span class="ln">28</span><span class="n">BOTTLE_TYPE</span> <span class="o">=</span> <span class="s2">&quot;bottle&quot;</span>
+<span class="ln">29</span><span class="n">FACES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="s2">&quot;end_a&quot;</span><span class="p">,</span> <span class="s2">&quot;end_b&quot;</span><span class="p">)</span>
+<span class="ln">30</span><span class="n">_HALF</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">])</span>
+<span class="ln">31</span>
+<span class="ln">32</span>
+<span class="ln">33</span><span class="k">def</span><span class="w"> </span><span class="nf">_rot</span><span class="p">(</span><span class="n">roll</span><span class="p">,</span> <span class="n">pitch</span><span class="p">,</span> <span class="n">yaw</span><span class="p">):</span>
+<span class="ln">34</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;World-from-body rotation matrix for the recorded euler triple.&quot;&quot;&quot;</span>
+<span class="ln">35</span>    <span class="n">cr</span><span class="p">,</span> <span class="n">sr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">roll</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">roll</span><span class="p">)</span>
+<span class="ln">36</span>    <span class="n">cp</span><span class="p">,</span> <span class="n">sp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">pitch</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">pitch</span><span class="p">)</span>
+<span class="ln">37</span>    <span class="n">cy</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">yaw</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">yaw</span><span class="p">)</span>
+<span class="ln">38</span>    <span class="n">rx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">cr</span><span class="p">,</span> <span class="o">-</span><span class="n">sr</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">sr</span><span class="p">,</span> <span class="n">cr</span><span class="p">]])</span>
+<span class="ln">39</span>    <span class="n">ry</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">cp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sp</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="n">sp</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">cp</span><span class="p">]])</span>
+<span class="ln">40</span>    <span class="n">rz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">cy</span><span class="p">,</span> <span class="o">-</span><span class="n">sy</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">sy</span><span class="p">,</span> <span class="n">cy</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="ln">41</span>    <span class="k">return</span> <span class="n">rz</span> <span class="o">@</span> <span class="n">ry</span> <span class="o">@</span> <span class="n">rx</span>
+<span class="ln">42</span>
+<span class="ln">43</span>
+<span class="ln">44</span><span class="k">def</span><span class="w"> </span><span class="nf">_block_frame</span><span class="p">(</span><span class="n">feat</span><span class="p">):</span>
+<span class="ln">45</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return (centre, rotation, half-extents) for one observed block.&quot;&quot;&quot;</span>
+<span class="ln">46</span>    <span class="n">centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">feat</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">feat</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span> <span class="n">feat</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">]])</span>
+<span class="ln">47</span>    <span class="n">rot</span> <span class="o">=</span> <span class="n">_rot</span><span class="p">(</span><span class="n">feat</span><span class="p">[</span><span class="s2">&quot;roll&quot;</span><span class="p">],</span> <span class="n">feat</span><span class="p">[</span><span class="s2">&quot;pitch&quot;</span><span class="p">],</span> <span class="n">feat</span><span class="p">[</span><span class="s2">&quot;yaw&quot;</span><span class="p">])</span>
+<span class="ln">48</span>    <span class="n">half</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">feat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;half_x&quot;</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">),</span>
+<span class="ln">49</span>                     <span class="n">feat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;half_y&quot;</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">),</span>
+<span class="ln">50</span>                     <span class="n">feat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;half_z&quot;</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">)])</span>
+<span class="ln">51</span>    <span class="k">return</span> <span class="n">centre</span><span class="p">,</span> <span class="n">rot</span><span class="p">,</span> <span class="n">half</span>
+<span class="ln">52</span>
+<span class="ln">53</span>
+<span class="ln">54</span><span class="k">def</span><span class="w"> </span><span class="nf">_up_axis</span><span class="p">(</span><span class="n">rot</span><span class="p">):</span>
+<span class="ln">55</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Which local axis points most nearly straight up, and its sign.&quot;&quot;&quot;</span>
+<span class="ln">56</span>    <span class="n">col_z</span> <span class="o">=</span> <span class="n">rot</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># world-z component of each local axis</span>
+<span class="ln">57</span>    <span class="n">axis</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">col_z</span><span class="p">)))</span>
+<span class="ln">58</span>    <span class="k">return</span> <span class="n">axis</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">col_z</span><span class="p">[</span><span class="n">axis</span><span class="p">])</span> <span class="ow">or</span> <span class="mf">1.0</span><span class="p">)</span>
+<span class="ln">59</span>
+<span class="ln">60</span>
+<span class="ln">61</span><span class="k">def</span><span class="w"> </span><span class="nf">_dab_face</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">nozzle</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+<span class="ln">62</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;Face name the nozzle would glue, or None.</span>
+<span class="ln">63</span>
+<span class="ln">64</span><span class="sd">    The nozzle must sit above the block&#39;s up-facing surface, within `dab_height` of it and</span>
+<span class="ln">65</span><span class="sd">    inside its lateral extent (plus `dab_radius` of slop).  The face is the top face unless</span>
+<span class="ln">66</span><span class="sd">    the hit point lies in the outer `1 - end_frac` fraction of the long (local x) axis, in</span>
+<span class="ln">67</span><span class="sd">    which case it is the corresponding end face.  When the up-facing surface is itself an</span>
+<span class="ln">68</span><span class="sd">    end face (a block standing on end), that end face is the one glued.</span>
+<span class="ln">69</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="ln">70</span>    <span class="n">centre</span><span class="p">,</span> <span class="n">rot</span><span class="p">,</span> <span class="n">half</span> <span class="o">=</span> <span class="n">_block_frame</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span>
+<span class="ln">71</span>    <span class="n">axis</span><span class="p">,</span> <span class="n">sign</span> <span class="o">=</span> <span class="n">_up_axis</span><span class="p">(</span><span class="n">rot</span><span class="p">)</span>
+<span class="ln">72</span>    <span class="n">local</span> <span class="o">=</span> <span class="n">rot</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="n">nozzle</span> <span class="o">-</span> <span class="n">centre</span><span class="p">)</span>
+<span class="ln">73</span>    <span class="n">height</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">local</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">-</span> <span class="n">half</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
+<span class="ln">74</span>    <span class="k">if</span> <span class="n">height</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1e-4</span> <span class="ow">or</span> <span class="n">height</span> <span class="o">&gt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dab_height&quot;</span><span class="p">]:</span>
+<span class="ln">75</span>        <span class="k">return</span> <span class="kc">None</span>
+<span class="ln">76</span>    <span class="c1"># lateral containment in the other two axes</span>
+<span class="ln">77</span>    <span class="k">for</span> <span class="n">other</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+<span class="ln">78</span>        <span class="k">if</span> <span class="n">other</span> <span class="o">==</span> <span class="n">axis</span><span class="p">:</span>
+<span class="ln">79</span>            <span class="k">continue</span>
+<span class="ln">80</span>        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">local</span><span class="p">[</span><span class="n">other</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">half</span><span class="p">[</span><span class="n">other</span><span class="p">]</span> <span class="o">+</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;dab_radius&quot;</span><span class="p">]:</span>
+<span class="ln">81</span>            <span class="k">return</span> <span class="kc">None</span>
+<span class="ln">82</span>    <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="ln">83</span>        <span class="k">return</span> <span class="s2">&quot;end_b&quot;</span> <span class="k">if</span> <span class="n">sign</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;end_a&quot;</span>
+<span class="ln">84</span>    <span class="c1"># up-facing area is a long face: pick top vs end from the position along local x</span>
+<span class="ln">85</span>    <span class="k">if</span> <span class="n">local</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;end_frac&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">half</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+<span class="ln">86</span>        <span class="k">return</span> <span class="s2">&quot;end_b&quot;</span>
+<span class="ln">87</span>    <span class="k">if</span> <span class="n">local</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;end_frac&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">half</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+<span class="ln">88</span>        <span class="k">return</span> <span class="s2">&quot;end_a&quot;</span>
+<span class="ln">89</span>    <span class="k">return</span> <span class="s2">&quot;top&quot;</span>
+<span class="ln">90</span>
+<span class="ln">91</span>
+<span class="ln">92</span><span class="k">def</span><span class="w"> </span><span class="nf">_end_point</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">face</span><span class="p">):</span>
+<span class="ln">93</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;World position of the centre of an end face, and its outward normal.&quot;&quot;&quot;</span>
+<span class="ln">94</span>    <span class="n">centre</span><span class="p">,</span> <span class="n">rot</span><span class="p">,</span> <span class="n">half</span> <span class="o">=</span> <span class="n">_block_frame</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span>
+<span class="ln">95</span>    <span class="n">sign</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">face</span> <span class="o">==</span> <span class="s2">&quot;end_b&quot;</span> <span class="k">else</span> <span class="o">-</span><span class="mf">1.0</span>
+<span class="ln">96</span>    <span class="n">normal</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">rot</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="ln">97</span>    <span class="k">return</span> <span class="n">centre</span> <span class="o">+</span> <span class="n">normal</span> <span class="o">*</span> <span class="n">half</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">normal</span>
+<span class="ln">98</span>
+<span class="ln">99</span>
+<span class="ln">100</span><span class="k">def</span><span class="w"> </span><span class="nf">_observed</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">type_name</span><span class="p">):</span>
+<span class="ln">101</span>    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="ln">102</span>    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">observation</span><span class="p">:</span>
+<span class="ln">103</span>        <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">type_name</span><span class="p">:</span>
+<span class="ln">104</span>            <span class="k">continue</span>
+<span class="ln">105</span>        <span class="n">out</span><span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<span class="ln">106</span>            <span class="n">f</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">observation</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">f</span><span class="p">))</span>
+<span class="ln">107</span>            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">feature_names</span>
+<span class="ln">108</span>        <span class="p">}</span>
+<span class="ln">109</span>    <span class="k">return</span> <span class="n">out</span>
+<span class="ln">110</span>
+<span class="ln">111</span>
+<span class="ln">112</span><span class="k">class</span><span class="w"> </span><span class="nc">BridgeGlueWeld</span><span class="p">(</span><span class="n">BaseSimulator</span><span class="p">):</span>  <span class="c1"># noqa: F821  (injected by the loader)</span>
+<span class="ln">113</span>
+<span class="ln">114</span>    <span class="n">AGENT_PARAM_SPECS</span> <span class="o">=</span> <span class="p">[</span>
+<span class="ln">115</span>        <span class="c1"># how fast a held nozzle deposits glue (level per action)</span>
+<span class="ln">116</span>        <span class="c1"># directly observed on level 1: the reading stepped 0 -&gt; 0.2 -&gt; 0.4 -&gt; 1.0, so the</span>
+<span class="ln">117</span>        <span class="c1"># per-action deposit is ~0.2; the bounds keep the pose-residual fit from running away</span>
+<span class="ln">118</span>        <span class="c1"># to a degenerate value that the pose data cannot actually see.</span>
+<span class="ln">119</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;glue_rate&quot;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.6</span><span class="p">),</span>
+<span class="ln">120</span>        <span class="c1"># lateral slop around the up-facing area that still catches the dab</span>
+<span class="ln">121</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;dab_radius&quot;</span><span class="p">,</span> <span class="mf">0.015</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.002</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">),</span>
+<span class="ln">122</span>        <span class="c1"># how far above the surface the nozzle may sit and still deposit</span>
+<span class="ln">123</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;dab_height&quot;</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.002</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.06</span><span class="p">),</span>
+<span class="ln">124</span>        <span class="c1"># fraction of the half-length beyond which a dab counts as an end, not the top</span>
+<span class="ln">125</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;end_frac&quot;</span><span class="p">,</span> <span class="mf">0.55</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.95</span><span class="p">),</span>
+<span class="ln">126</span>        <span class="c1"># largest face-to-face gap that still cures into a weld</span>
+<span class="ln">127</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;weld_gap&quot;</span><span class="p">,</span> <span class="mf">0.006</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.025</span><span class="p">),</span>
+<span class="ln">128</span>        <span class="c1"># largest lateral (off-axis) offset of two mating end faces that still cures</span>
+<span class="ln">129</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;weld_lateral&quot;</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.005</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.045</span><span class="p">),</span>
+<span class="ln">130</span>        <span class="c1"># glue level required before a contact cures</span>
+<span class="ln">131</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;cure_level&quot;</span><span class="p">,</span> <span class="mf">0.15</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.9</span><span class="p">),</span>
+<span class="ln">132</span>        <span class="c1"># nozzle offset below the bottle origin</span>
+<span class="ln">133</span>        <span class="n">ParamSpec</span><span class="p">(</span><span class="s2">&quot;nozzle_drop&quot;</span><span class="p">,</span> <span class="mf">0.03</span><span class="p">,</span> <span class="n">lo</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">hi</span><span class="o">=</span><span class="mf">0.05</span><span class="p">),</span>
+<span class="ln">134</span>    <span class="p">]</span>
+<span class="ln">135</span>
+<span class="ln">136</span>    <span class="c1"># Scored quantities: the block poses, which is what the welds actually change.</span>
+<span class="ln">137</span>    <span class="n">RESIDUAL_FEATURES</span> <span class="o">=</span> <span class="p">{</span><span class="n">BLOCK_TYPE</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;z&quot;</span><span class="p">,</span> <span class="s2">&quot;roll&quot;</span><span class="p">,</span> <span class="s2">&quot;pitch&quot;</span><span class="p">,</span> <span class="s2">&quot;yaw&quot;</span><span class="p">]}</span>
+<span class="ln">138</span>
+<span class="ln">139</span>    <span class="n">MODEL_STATE_INIT</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;glue&quot;</span><span class="p">:</span> <span class="p">{},</span> <span class="s2">&quot;welds&quot;</span><span class="p">:</span> <span class="p">[],</span> <span class="s2">&quot;seen&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<span class="ln">140</span>
+<span class="ln">141</span>    <span class="c1"># ---------------------------------------------------------------- memory</span>
+<span class="ln">142</span>
+<span class="ln">143</span>    <span class="c1"># Generous slack used only to decide whether a REMEMBERED weld is still plausible.</span>
+<span class="ln">144</span>    <span class="c1"># It must be looser than the curing tolerances so observation noise on a genuinely</span>
+<span class="ln">145</span>    <span class="c1"># welded pair can never prune it.</span>
+<span class="ln">146</span>    <span class="n">STALE_GAP</span> <span class="o">=</span> <span class="mf">0.035</span>
+<span class="ln">147</span>    <span class="n">STALE_LATERAL</span> <span class="o">=</span> <span class="mf">0.045</span>
+<span class="ln">148</span>
+<span class="ln">149</span>    <span class="nd">@classmethod</span>
+<span class="ln">150</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_pair_adjacency</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">fa</span><span class="p">,</span> <span class="n">fb</span><span class="p">):</span>
+<span class="ln">151</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return (face_a, face_b) if the two blocks sit end-to-end, else None.&quot;&quot;&quot;</span>
+<span class="ln">152</span>        <span class="n">best</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="ln">153</span>        <span class="k">for</span> <span class="n">face_a</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;end_a&quot;</span><span class="p">,</span> <span class="s2">&quot;end_b&quot;</span><span class="p">):</span>
+<span class="ln">154</span>            <span class="n">pa</span><span class="p">,</span> <span class="n">na</span> <span class="o">=</span> <span class="n">_end_point</span><span class="p">(</span><span class="n">fa</span><span class="p">,</span> <span class="n">face_a</span><span class="p">)</span>
+<span class="ln">155</span>            <span class="k">for</span> <span class="n">face_b</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;end_a&quot;</span><span class="p">,</span> <span class="s2">&quot;end_b&quot;</span><span class="p">):</span>
+<span class="ln">156</span>                <span class="n">pb</span><span class="p">,</span> <span class="n">nb</span> <span class="o">=</span> <span class="n">_end_point</span><span class="p">(</span><span class="n">fb</span><span class="p">,</span> <span class="n">face_b</span><span class="p">)</span>
+<span class="ln">157</span>                <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">na</span> <span class="o">@</span> <span class="n">nb</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mf">0.85</span><span class="p">:</span>
+<span class="ln">158</span>                    <span class="k">continue</span>
+<span class="ln">159</span>                <span class="n">delta</span> <span class="o">=</span> <span class="n">pb</span> <span class="o">-</span> <span class="n">pa</span>
+<span class="ln">160</span>                <span class="n">gap</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">delta</span> <span class="o">@</span> <span class="n">na</span><span class="p">))</span>
+<span class="ln">161</span>                <span class="n">lateral</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta</span> <span class="o">-</span> <span class="p">(</span><span class="n">delta</span> <span class="o">@</span> <span class="n">na</span><span class="p">)</span> <span class="o">*</span> <span class="n">na</span><span class="p">))</span>
+<span class="ln">162</span>                <span class="k">if</span> <span class="n">gap</span> <span class="o">&lt;=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STALE_GAP</span> <span class="ow">and</span> <span class="n">lateral</span> <span class="o">&lt;=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">STALE_LATERAL</span><span class="p">:</span>
+<span class="ln">163</span>                    <span class="k">if</span> <span class="n">best</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">gap</span> <span class="o">&lt;</span> <span class="n">best</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+<span class="ln">164</span>                        <span class="n">best</span> <span class="o">=</span> <span class="p">(</span><span class="n">face_a</span><span class="p">,</span> <span class="n">face_b</span><span class="p">,</span> <span class="n">gap</span><span class="p">)</span>
+<span class="ln">165</span>        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">best</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">(</span><span class="n">best</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">best</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="ln">166</span>
+<span class="ln">167</span>    <span class="nd">@classmethod</span>
+<span class="ln">168</span>    <span class="k">def</span><span class="w"> </span><span class="nf">update_model_state</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">observation</span><span class="p">,</span> <span class="n">model_state</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+<span class="ln">169</span>        <span class="n">blocks</span> <span class="o">=</span> <span class="n">_observed</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">BLOCK_TYPE</span><span class="p">)</span>
+<span class="ln">170</span>        <span class="n">bottles</span> <span class="o">=</span> <span class="n">_observed</span><span class="p">(</span><span class="n">observation</span><span class="p">,</span> <span class="n">BOTTLE_TYPE</span><span class="p">)</span>
+<span class="ln">171</span>        <span class="n">glue</span> <span class="o">=</span> <span class="n">model_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;glue&quot;</span><span class="p">,</span> <span class="p">{})</span>
+<span class="ln">172</span>        <span class="n">welds</span> <span class="o">=</span> <span class="n">model_state</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;welds&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="ln">173</span>        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">:</span>
+<span class="ln">174</span>            <span class="n">glue</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">{</span><span class="n">f</span><span class="p">:</span> <span class="mf">0.0</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">FACES</span><span class="p">})</span>
+<span class="ln">175</span>
+<span class="ln">176</span>        <span class="c1"># 0. consistency: a weld is rigid, so its two blocks must still be end-adjacent in</span>
+<span class="ln">177</span>        <span class="c1">#    the current observation.  Any remembered pair that is not is stale (e.g. memory</span>
+<span class="ln">178</span>        <span class="c1">#    carried across episodes, or a joint that never really took) and is dropped.</span>
+<span class="ln">179</span>        <span class="n">kept</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="ln">180</span>        <span class="k">for</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">welds</span><span class="p">:</span>
+<span class="ln">181</span>            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="ln">182</span>            <span class="k">if</span> <span class="n">a</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">blocks</span> <span class="ow">or</span> <span class="n">b</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">:</span>
+<span class="ln">183</span>                <span class="k">continue</span>
+<span class="ln">184</span>            <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_pair_adjacency</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">blocks</span><span class="p">[</span><span class="n">b</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ln">185</span>                <span class="n">kept</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+<span class="ln">186</span>        <span class="n">welds</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">kept</span>
+<span class="ln">187</span>
+<span class="ln">188</span>        <span class="c1"># 1. trust the environment&#39;s own glue readings when they are present: they are</span>
+<span class="ln">189</span>        <span class="c1">#    observable features, so tracking a real episode needs no integration at all.</span>
+<span class="ln">190</span>        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">feat</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="ln">191</span>            <span class="k">for</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">FACES</span><span class="p">:</span>
+<span class="ln">192</span>                <span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;glue_&quot;</span> <span class="o">+</span> <span class="n">face</span>
+<span class="ln">193</span>                <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">feat</span><span class="p">:</span>
+<span class="ln">194</span>                    <span class="n">glue</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">face</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">glue</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">face</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">feat</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+<span class="ln">195</span>
+<span class="ln">196</span>        <span class="c1"># 2. dispense from a held bottle onto the surface under the nozzle.</span>
+<span class="ln">197</span>        <span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="n">bottles</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+<span class="ln">198</span>            <span class="k">if</span> <span class="n">feat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_held&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+<span class="ln">199</span>                <span class="k">continue</span>
+<span class="ln">200</span>            <span class="n">nozzle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">feat</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">],</span> <span class="n">feat</span><span class="p">[</span><span class="s2">&quot;y&quot;</span><span class="p">],</span>
+<span class="ln">201</span>                               <span class="n">feat</span><span class="p">[</span><span class="s2">&quot;z&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;nozzle_drop&quot;</span><span class="p">]])</span>
+<span class="ln">202</span>            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">bfeat</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="ln">203</span>                <span class="k">if</span> <span class="n">bfeat</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;is_held&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.5</span><span class="p">:</span>
+<span class="ln">204</span>                    <span class="k">continue</span>
+<span class="ln">205</span>                <span class="n">face</span> <span class="o">=</span> <span class="n">_dab_face</span><span class="p">(</span><span class="n">bfeat</span><span class="p">,</span> <span class="n">nozzle</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="ln">206</span>                <span class="k">if</span> <span class="n">face</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ln">207</span>                    <span class="n">glue</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">face</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">glue</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">face</span><span class="p">]</span>
+<span class="ln">208</span>                                           <span class="o">+</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;glue_rate&quot;</span><span class="p">])</span>
+<span class="ln">209</span>
+<span class="ln">210</span>        <span class="c1"># 3. cure: opposing end faces in contact with glue on both fuse, consuming the glue.</span>
+<span class="ln">211</span>        <span class="n">names</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+<span class="ln">212</span>        <span class="n">existing</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">welds</span><span class="p">}</span>
+<span class="ln">213</span>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+<span class="ln">214</span>            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">names</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:]:</span>
+<span class="ln">215</span>                <span class="k">if</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)))</span> <span class="ow">in</span> <span class="n">existing</span><span class="p">:</span>
+<span class="ln">216</span>                    <span class="k">continue</span>
+<span class="ln">217</span>                <span class="k">for</span> <span class="n">fa</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;end_a&quot;</span><span class="p">,</span> <span class="s2">&quot;end_b&quot;</span><span class="p">):</span>
+<span class="ln">218</span>                    <span class="n">pa</span><span class="p">,</span> <span class="n">na</span> <span class="o">=</span> <span class="n">_end_point</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">fa</span><span class="p">)</span>
+<span class="ln">219</span>                    <span class="k">for</span> <span class="n">fb</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;end_a&quot;</span><span class="p">,</span> <span class="s2">&quot;end_b&quot;</span><span class="p">):</span>
+<span class="ln">220</span>                        <span class="n">pb</span><span class="p">,</span> <span class="n">nb</span> <span class="o">=</span> <span class="n">_end_point</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">b</span><span class="p">],</span> <span class="n">fb</span><span class="p">)</span>
+<span class="ln">221</span>                        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">na</span> <span class="o">@</span> <span class="n">nb</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mf">0.9</span><span class="p">:</span>      <span class="c1"># faces must oppose</span>
+<span class="ln">222</span>                            <span class="k">continue</span>
+<span class="ln">223</span>                        <span class="n">delta</span> <span class="o">=</span> <span class="n">pb</span> <span class="o">-</span> <span class="n">pa</span>
+<span class="ln">224</span>                        <span class="n">gap</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">delta</span> <span class="o">@</span> <span class="n">na</span><span class="p">))</span>
+<span class="ln">225</span>                        <span class="n">lateral</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">delta</span> <span class="o">-</span> <span class="p">(</span><span class="n">delta</span> <span class="o">@</span> <span class="n">na</span><span class="p">)</span> <span class="o">*</span> <span class="n">na</span><span class="p">))</span>
+<span class="ln">226</span>                        <span class="k">if</span> <span class="n">gap</span> <span class="o">&gt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;weld_gap&quot;</span><span class="p">]:</span>
+<span class="ln">227</span>                            <span class="k">continue</span>
+<span class="ln">228</span>                        <span class="k">if</span> <span class="n">lateral</span> <span class="o">&gt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;weld_lateral&quot;</span><span class="p">]:</span>
+<span class="ln">229</span>                            <span class="k">continue</span>
+<span class="ln">230</span>                        <span class="k">if</span> <span class="p">(</span><span class="n">glue</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">fa</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cure_level&quot;</span><span class="p">]</span>
+<span class="ln">231</span>                                <span class="ow">or</span> <span class="n">glue</span><span class="p">[</span><span class="n">b</span><span class="p">][</span><span class="n">fb</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;cure_level&quot;</span><span class="p">]):</span>
+<span class="ln">232</span>                            <span class="k">continue</span>
+<span class="ln">233</span>                        <span class="n">welds</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+<span class="ln">234</span>                        <span class="n">existing</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))))</span>
+<span class="ln">235</span>                        <span class="n">glue</span><span class="p">[</span><span class="n">a</span><span class="p">][</span><span class="n">fa</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="ln">236</span>                        <span class="n">glue</span><span class="p">[</span><span class="n">b</span><span class="p">][</span><span class="n">fb</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="ln">237</span>                        <span class="k">break</span>
+<span class="ln">238</span>                    <span class="k">else</span><span class="p">:</span>
+<span class="ln">239</span>                        <span class="k">continue</span>
+<span class="ln">240</span>                    <span class="k">break</span>
+<span class="ln">241</span>        <span class="n">model_state</span><span class="p">[</span><span class="s2">&quot;seen&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="ln">242</span>
+<span class="ln">243</span>    <span class="c1"># ------------------------------------------------------------- dynamics</span>
+<span class="ln">244</span>
+<span class="ln">245</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_weld_pairs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="ln">246</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;Remembered welds, gated on the pair still being end-adjacent right now.</span>
+<span class="ln">247</span>
+<span class="ln">248</span><span class="sd">        The gate matters because remembered welds can be stale (memory reconstructed over a</span>
+<span class="ln">249</span><span class="sd">        different episode).  A weld is rigid, so a remembered pair that is nowhere near</span>
+<span class="ln">250</span><span class="sd">        end-to-end in the live scene cannot be real and must not be realised in the engine.</span>
+<span class="ln">251</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="ln">252</span>        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_state</span> <span class="ow">or</span> <span class="p">{}</span>
+<span class="ln">253</span>        <span class="n">pairs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;welds&quot;</span><span class="p">,</span> <span class="p">[])]</span>
+<span class="ln">254</span>        <span class="k">if</span> <span class="ow">not</span> <span class="n">pairs</span><span class="p">:</span>
+<span class="ln">255</span>            <span class="k">return</span> <span class="p">[]</span>
+<span class="ln">256</span>        <span class="k">try</span><span class="p">:</span>
+<span class="ln">257</span>            <span class="n">blocks</span> <span class="o">=</span> <span class="n">_observed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_observation</span><span class="p">(),</span> <span class="n">BLOCK_TYPE</span><span class="p">)</span>
+<span class="ln">258</span>        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pragma: no cover - keep raw memory if unreadable</span>
+<span class="ln">259</span>            <span class="k">return</span> <span class="n">pairs</span>
+<span class="ln">260</span>        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="ln">261</span>        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+<span class="ln">262</span>            <span class="k">if</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">blocks</span> <span class="ow">and</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">:</span>
+<span class="ln">263</span>                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pair_adjacency</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">a</span><span class="p">],</span> <span class="n">blocks</span><span class="p">[</span><span class="n">b</span><span class="p">])</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="ln">264</span>                    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+<span class="ln">265</span>        <span class="k">return</span> <span class="n">out</span>
+<span class="ln">266</span>
+<span class="ln">267</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_publish_links</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="ln">268</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;Register the inferred rigid links, but ONLY when the set changes.</span>
+<span class="ln">269</span>
+<span class="ln">270</span><span class="sd">        Re-registering an unchanged link every step re-creates the engine constraint at the</span>
+<span class="ln">271</span><span class="sd">        latest relative transform, which pumps energy into the assembly (observed: a welded</span>
+<span class="ln">272</span><span class="sd">        beam jittering off the table).  Publishing on change only keeps the joint rigid and</span>
+<span class="ln">273</span><span class="sd">        the rollout stable.  The empty set is published too, so a pruned weld disappears.</span>
+<span class="ln">274</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="ln">275</span>        <span class="n">pairs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weld_pairs</span><span class="p">()</span>
+<span class="ln">276</span>        <span class="n">key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">p</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">))</span>
+<span class="ln">277</span>        <span class="k">if</span> <span class="n">force</span> <span class="ow">or</span> <span class="n">key</span> <span class="o">!=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_published_links&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+<span class="ln">278</span>            <span class="bp">self</span><span class="o">.</span><span class="n">restore_model_attachments</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span>
+<span class="ln">279</span>            <span class="bp">self</span><span class="o">.</span><span class="n">_published_links</span> <span class="o">=</span> <span class="n">key</span>
+<span class="ln">280</span>
+<span class="ln">281</span>    <span class="k">def</span><span class="w"> </span><span class="nf">_domain_specific_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="ln">282</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_publish_links</span><span class="p">()</span>
+<span class="ln">283</span>
+<span class="ln">284</span>    <span class="k">def</span><span class="w"> </span><span class="nf">restore_model_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="ln">285</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_published_links</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="ln">286</span>        <span class="bp">self</span><span class="o">.</span><span class="n">_publish_links</span><span class="p">(</span><span class="n">force</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="ln">287</span>
+<span class="ln">288</span>
+<span class="ln">289</span><span class="n">RESIDUAL_ENV</span> <span class="o">=</span> <span class="n">BridgeGlueWeld</span>
+<span class="ln">290</span><span class="n">RESIDUAL_FEATURES</span> <span class="o">=</span> <span class="n">BridgeGlueWeld</span><span class="o">.</span><span class="n">RESIDUAL_FEATURES</span><!-- /code:full --></code></pre>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section class="section" id="results" aria-labelledby="results-title">
+  <div class="section-heading">
+    <h2 id="results-title">Results</h2>
+    <div class="lead">
+      <p>We compare EMPIRIC with three baselines, an oracle with the ground-truth dynamics, and two ablations, over five seeds in each domain. All agents use Claude Opus 5 and share the same skills, noisy observations, and step budgets. A run succeeds only if every training and test task is solved.</p>
+    </div>
+  </div>
+  <div class="stats">
+    <div><strong>25 / 25</strong><span>runs solved by EMPIRIC across the five domains</span></div>
+    <div><strong>16 / 25</strong><span>runs solved by the strongest baselines, Direct agent and Standalone sim.</span></div>
+    <div><strong>p &le; 0.002</strong><span>for EMPIRIC against each baseline, by a two-sided Fisher's exact test pooled over domains</span></div>
+  </div>
+  <figure class="figure">
+    <img src="assets/img/results.webp" width="2200" height="792" loading="lazy" alt="Bar charts of the percentage of runs solved per domain and agent, and curves of runs solved against the environment-step budget.">
+    <figcaption><strong>Results with noisy observations across five domains.</strong> <em>Top:</em> percentage of the five runs with every training and test task solved. <em>Bottom:</em> percentage of runs solved within each environment-step budget; each curve steps up at a solved run's total steps and ends at the agent's rate above.</figcaption>
+  </figure>
+  <div class="cards three">
+    <article>
+      <h3>Fewer steps to solve</h3>
+      <p>In every domain, EMPIRIC reaches a 60% solve rate with fewer steps than any baseline that reaches it at all. The comparisons suggest that part of the advantage comes from simulating robot skills together with the underlying physics: baselines often fail when they extrapolate beyond what they observed, such as extending a straight cascade to a turning one.</p>
+    </article>
+    <article>
+      <h3>Matches oracle success</h3>
+      <p>EMPIRIC matches Oracle dynamics at 25/25 runs. It uses 12&ndash;18% more steps than Oracle in Domino, Bridge, and Balloons, 74% more in Boil, and 8% fewer in Fan: correct dynamics alone do not guarantee efficiency, because Oracle must still estimate the state from noisy observations.</p>
+    </article>
+    <article>
+      <h3>Uncertainty for irreversible actions</h3>
+      <p>Without harness fitting, 20/25 runs succeed, and without explicit uncertainty, 21/25. In Balloons, where releases cannot be undone, EMPIRIC solves 5/5 runs, against 2/5 and 3/5 for the two ablations.</p>
+    </article>
+  </div>
+</section>
+
+<section class="band" id="robot" aria-labelledby="robot-title">
+  <div class="section">
+    <div class="section-heading">
+      <h2 id="robot-title">On a real robot</h2>
+      <div class="lead">
+        <p>In a physical Fan&ndash;Domino task, the robot knows neither the fan's wind nor the masses of its two dominoes. The training goal is to land the lighter domino flat in a target patch with one gust. At test, the patch moves farther downwind, and the robot must reach it with the heavier domino.</p>
+        <p>From two gusts, EMPIRIC learns a wind force that decays after the fan stops and infers both masses. Its model predicts that no placement of the green domino alone reaches the new patch, so the agent stands the gray domino upwind, where its fall knocks the green one in. The predicted slide of 10.1&nbsp;&plusmn;&nbsp;2.3&nbsp;cm matches the measured 9.9&nbsp;cm.</p>
+      </div>
+    </div>
+    <div class="strip">
+      <h3>Experiments</h3>
+      <p>The green block before and after a gust, then the gray block before and after. The green block stays upright; the gray block falls into the target.</p>
+      <div class="frames">
+        <img src="assets/img/robot/01_green_probe_before.webp" width="959" height="562" loading="lazy" alt="The green block stands downwind of the fan before the first gust.">
+        <img src="assets/img/robot/02_green_probe_held_upright.webp" width="959" height="562" loading="lazy" alt="The green block still stands upright after the gust.">
+        <img src="assets/img/robot/03_gray_probe_before.webp" width="959" height="562" loading="lazy" alt="The gray block stands downwind of the fan before the second gust.">
+        <img src="assets/img/robot/05_gray_probe_held_flat.webp" width="959" height="562" loading="lazy" alt="The gray block lies flat in the target after the gust.">
+      </div>
+    </div>
+    <div class="strip">
+      <h3>Test setup</h3>
+      <p>The relocated target, the green block placed first, the gray block placed upwind of it, and the robot pressing the fan button.</p>
+      <div class="frames">
+        <img src="assets/img/robot/06_target_relocated.webp" width="959" height="562" loading="lazy" alt="The pink target patch, moved farther from the fan.">
+        <img src="assets/img/robot/07_green_placed_first.webp" width="959" height="562" loading="lazy" alt="The robot has placed the green block.">
+        <img src="assets/img/robot/08_gray_placed_second.webp" width="959" height="562" loading="lazy" alt="The robot has placed the gray block upwind of the green one.">
+        <img src="assets/img/robot/09_test_button_press.webp" width="959" height="562" loading="lazy" alt="The robot presses the fan button.">
+      </div>
+    </div>
+    <div class="strip">
+      <h3>Cascade</h3>
+      <p>The gray block topples toward the green block and reaches it, the green block falls, and it comes to rest flat in the relocated target.</p>
+      <div class="frames">
+        <img src="assets/img/robot/10_gray_toppling_toward_green.webp" width="959" height="562" loading="lazy" alt="The gray block topples toward the green block.">
+        <img src="assets/img/robot/11_gray_reaches_green.webp" width="959" height="562" loading="lazy" alt="The gray block reaches the green block.">
+        <img src="assets/img/robot/12_green_toppling.webp" width="959" height="562" loading="lazy" alt="The green block topples.">
+        <img src="assets/img/robot/13_green_in_new_target.webp" width="959" height="562" loading="lazy" alt="The green block rests flat in the relocated target.">
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="citation" aria-labelledby="citation-title">
+  <div class="section-heading">
+    <h2 id="citation-title">Citation</h2>
+    <div class="lead"><p>If you use EMPIRIC, please cite the paper.</p></div>
+  </div>
+  <div class="code-card">
+    <div class="code-head"><span>BibTeX</span><button class="copy" type="button" id="copy-bibtex">Copy</button></div>
+    <pre class="code bibtex" id="bibtex">@article{liang2026empiric,
+  title   = {{EMPIRIC}: Experiment-Driven Learning of Residual World Models for Robot Planning},
+  author  = {Liang, Yichao and Li, Amber and Nguyen, Dat and Bunnapradist, Emily and Naim, Michelangelo and Kodali, Sreela and Merler, Matteo and Li, Bowen and Gopinathan, Kiran and Liu, Yiyun and Pimpalkhare, Nikhil and Tenenbaum, Joshua B. and Weller, Adrian and Tavares, Zenna and Silver, Tom and Ellis, Kevin},
+  journal = {arXiv preprint},
+  year    = {2026}
+}</pre>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>EMPIRIC</span>
+    <a href="https://github.com/BasisResearch/predicators">Code</a>
+    <a href="https://github.com/yichao-liang/empiric">Website source</a>
+  </div>
+</footer>
+
+<script src="assets/js/site.js" defer></script>
+</body>
+</html>
