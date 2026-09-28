@@ -84,6 +84,8 @@ sup { font-size: 0.68em; line-height: 0; }
 .authors { gap: 4px 18px; font-size: 17px; font-weight: 500; }
 .authors li, .affiliations li { white-space: nowrap; }
 .authors sup { margin-left: 2px; color: var(--hero-muted); }
+.authors a { color: inherit; }
+.authors a:hover { color: #ffffff; text-decoration: underline; text-underline-offset: 4px; }
 .affiliations { gap: 2px 16px; margin-top: 14px; font-size: 14px; color: var(--hero-muted); }
 .equal { margin-top: 6px; font-size: 14px; color: var(--hero-muted); }
 .hero-summary { margin-top: 26px; max-width: 620px; font-size: 18px; line-height: 1.65; color: var(--hero-ink); }
