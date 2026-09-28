@@ -17,9 +17,11 @@ python3 tools/build.py
 ```
 
 The script reads the paper repository's figures and robot photos, and one recorded EMPIRIC run per domain from the agent logs (the runs behind the paper's trajectory figures).
-It writes the figure images, the run videos with their posters, the hero clip, and the Bridge program.
+Domino, Bridge and Boil use each run's own `run.mp4`.
+Balloons and Fan use videos drawn from the recorded states in the current scene layouts, which predicators' `scripts/paper_figures/render_run_videos.py` writes to `logs/paper_run_videos`.
+The build writes the figure images, the run videos with their posters, the hero clip, and the Bridge program.
 It also rewrites the two code listings in `index.html` between their `<!-- code:... -->` markers; the rest of the page is untouched.
-Pass `--only figures|robot|videos|code` to rebuild one part, and `--paper`, `--logs` or `--ffmpeg` to change where it looks.
+Pass `--only figures|robot|videos|code` to rebuild one part, and `--paper`, `--logs`, `--rerendered` or `--ffmpeg` to change where it looks.
 Without a system ffmpeg, it uses the one bundled with the `imageio-ffmpeg` Python package.
 
 ## Adding the arXiv link

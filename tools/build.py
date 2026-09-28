@@ -40,6 +40,12 @@ RUNS = {
     "boil": "boil-mb_opus_gate_preflight_two_jug_tight_r1/seed1/run_20260917_082805",
     "fan": "fan_ramp-mb_opus_ramp_skill_repair_r1/seed2/run_20260921_090827",
 }
+# The Balloons and Fan scenes changed after their runs were recorded.
+# Their videos are drawn from the recorded states in the current layouts
+# by predicators' scripts/paper_figures/render_run_videos.py; the other
+# domains use the harness's own run.mp4.
+RERENDERED = Path("/orcd/home/002/ycliang/predicators/logs/paper_run_videos")
+RERENDERED_DOMAINS = ("balloons", "fan")
 # Each recording is 1520x900: the 900x900 scene, then the harness panel.
 SCENE_CROP = "crop=900:900:0:0"
 HERO_SECONDS = 6.0  # each domain's share of the hero loop
@@ -123,12 +129,19 @@ def build_robot(paper, out):
     print(f"robot: {len(ROBOT)} photos")
 
 
-def build_videos(ff, logs, out):
+def video_source(logs, rerendered, name):
+    """The run video the page shows for a domain."""
+    if name in RERENDERED_DOMAINS:
+        return rerendered / f"{name}.mp4"
+    return logs / RUNS[name] / "run.mp4"
+
+
+def build_videos(ff, logs, rerendered, out):
     """Copy each run video for streaming, with a poster and a hero clip."""
     out.mkdir(parents=True, exist_ok=True)
     clips = []
-    for name, rel in RUNS.items():
-        src = logs / rel / "run.mp4"
+    for name in RUNS:
+        src = video_source(logs, rerendered, name)
         length = duration(ff, src)
         # A stream copy keeps the recording as it is; faststart lets
         # browsers begin playback before the whole file arrives.
@@ -202,6 +215,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--paper", type=Path, default=PAPER)
     parser.add_argument("--logs", type=Path, default=LOGS)
+    parser.add_argument("--rerendered", type=Path, default=RERENDERED)
     parser.add_argument("--ffmpeg")
     parser.add_argument("--only", choices=["figures", "robot", "videos", "code"])
     args = parser.parse_args()
@@ -209,6 +223,7 @@ def main():
         "figures": lambda: build_figures(args.paper, SITE / "assets" / "img"),
         "robot": lambda: build_robot(args.paper, SITE / "assets" / "img" / "robot"),
         "videos": lambda: build_videos(ffmpeg_path(args.ffmpeg), args.logs,
+                                       args.rerendered,
                                        SITE / "assets" / "video"),
         "code": lambda: build_code(args.logs, SITE / "index.html"),
     }
