@@ -1,23 +1,7 @@
-// Set ARXIV_ID (for example "2609.01234") once the paper is announced.
-const ARXIV_ID = "";
-
 // The hero clip plays the last seconds of each domain's test task, in
 // this order and for this long each (see tools/build.py).
 const HERO_DOMAINS = ["Domino", "Bridge", "Balloons", "Boil", "Fan"];
 const HERO_SECONDS = 6;
-
-function setUpArxivLinks() {
-  document.querySelectorAll("[data-arxiv]").forEach((link) => {
-    if (ARXIV_ID) {
-      link.href = `https://arxiv.org/abs/${ARXIV_ID}`;
-      link.removeAttribute("aria-disabled");
-    } else {
-      link.title = "The arXiv link will appear once the paper is announced.";
-      const note = link.querySelector(".button-note");
-      if (note) note.textContent = "arXiv, coming soon";
-    }
-  });
-}
 
 function setUpHero() {
   const video = document.getElementById("hero-video");
@@ -77,7 +61,6 @@ function setUpCopy() {
   });
 }
 
-setUpArxivLinks();
 setUpHero();
 setUpRunVideos();
 setUpCopy();

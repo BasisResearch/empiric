@@ -67,7 +67,6 @@ sup { font-size: 0.68em; line-height: 0; }
   color: var(--ink);
 }
 .nav-button:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
-[aria-disabled="true"] { opacity: 0.55; cursor: default; pointer-events: none; }
 
 /* Hero */
 .hero {

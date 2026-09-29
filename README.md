@@ -24,7 +24,6 @@ It also rewrites the two code listings in `index.html` between their `<!-- code:
 Pass `--only figures|robot|videos|code` to rebuild one part, and `--paper`, `--logs`, `--rerendered` or `--ffmpeg` to change where it looks.
 Without a system ffmpeg, it uses the one bundled with the `imageio-ffmpeg` Python package.
 
-## Adding the arXiv link
+## Paper
 
-Set `ARXIV_ID` at the top of `assets/js/site.js` once the paper is announced.
-The arXiv buttons stay disabled until then.
+The paper is [arXiv:2609.35047](https://arxiv.org/abs/2609.35047); `index.html` links it from the navigation bar, the Paper button and the BibTeX entry.
