@@ -42,6 +42,18 @@ function setUpRunVideos() {
   });
 }
 
+function setUpSmoothScroll() {
+  // Smooth scrolling waits for load. The browser jumps to the address's
+  // #section while the web fonts load and shift the sections above it; an
+  // instant jump follows the section, and a smooth one overshoots it.
+  const smooth = () => document.documentElement.classList.add("smooth-scroll");
+  if (document.readyState === "complete") {
+    smooth();
+  } else {
+    window.addEventListener("load", smooth, { once: true });
+  }
+}
+
 function setUpCopy() {
   const button = document.getElementById("copy-bibtex");
   const source = document.getElementById("bibtex");
@@ -63,4 +75,5 @@ function setUpCopy() {
 
 setUpHero();
 setUpRunVideos();
+setUpSmoothScroll();
 setUpCopy();
