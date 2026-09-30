@@ -1,6 +1,6 @@
 # EMPIRIC website
 
-Project page for *EMPIRIC: Experiment-Driven Learning of Residual World Models for Robot Planning*, served by GitHub Pages at https://yichao-liang.github.io/empiric/.
+Project page for *EMPIRIC: Experiment-Driven Learning of Residual World Models for Robot Planning*, served by GitHub Pages at https://basisresearch.github.io/empiric/.
 
 The code is at https://github.com/BasisResearch/predicators.
 
@@ -27,3 +27,9 @@ Without a system ffmpeg, it uses the one bundled with the `imageio-ffmpeg` Pytho
 ## Paper
 
 The paper is [arXiv:2609.35047](https://arxiv.org/abs/2609.35047); `index.html` links it from the navigation bar, the Paper button and the BibTeX entry.
+
+## Old address
+
+The site first lived at https://yichao-liang.github.io/empiric/, the address the arXiv paper gives.
+The repository https://github.com/yichao-liang/empiric now holds only a page that forwards every address under it to the same path here.
+Keep GitHub Pages on in that repository for as long as the paper's link matters.
