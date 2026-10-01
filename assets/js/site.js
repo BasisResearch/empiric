@@ -71,11 +71,13 @@ function setUpHero() {
   video.addEventListener("click", toggle);
   document.getElementById("hero-back").addEventListener("click", () => skip(-SKIP_SECONDS));
   document.getElementById("hero-forward").addEventListener("click", () => skip(SKIP_SECONDS));
-  speeds.forEach((button) => button.addEventListener("click", () => {
+  const setSpeed = (button) => {
     speeds.forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
     video.defaultPlaybackRate = Number(button.dataset.rate);
     video.playbackRate = video.defaultPlaybackRate;
-  }));
+  };
+  speeds.forEach((button) => button.addEventListener("click", () => setSpeed(button)));
+  setSpeed(speeds.find((button) => button.getAttribute("aria-pressed") === "true"));
 
   seek.addEventListener("pointerdown", () => { scrubbing = true; });
   ["pointerup", "pointercancel", "change"].forEach((name) => {
