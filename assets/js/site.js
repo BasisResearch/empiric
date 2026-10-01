@@ -1,6 +1,8 @@
 // A player shows one of several clips, picked with its tab buttons, and
-// moves on to the next clip when one plays to its end. The hero's player
-// draws its own controls; the real-robot video uses the browser's.
+// moves on to the next clip when one plays to its end. A tab's data-rate is
+// the speed its clip starts at; without one the speed carries over. The
+// hero's player draws its own controls; the real-robot video uses the
+// browser's.
 const SKIP_SECONDS = 5;
 
 function clock(seconds) {
@@ -26,6 +28,13 @@ function setUpPlayer(player, { autoplay, loop }) {
   // frame; only playback that runs into the end moves on.
   let ranOut = false;
 
+  const setRate = (rate) => {
+    speeds.forEach((button) => {
+      button.setAttribute("aria-pressed", String(Number(button.dataset.rate) === rate));
+    });
+    video.defaultPlaybackRate = rate;
+    video.playbackRate = rate;
+  };
   const start = () => {
     video.play().catch(() => {
       // Autoplay can be refused; the poster stays up.
@@ -58,6 +67,7 @@ function setUpPlayer(player, { autoplay, loop }) {
     tabs.forEach((other) => other.setAttribute("aria-pressed", String(other === tab)));
     video.poster = tab.dataset.poster;
     video.src = tab.dataset.video;
+    if (tab.dataset.rate) setRate(Number(tab.dataset.rate));
     name.textContent = tab.textContent;
     caption.textContent = tab.dataset.caption;
     player.classList.toggle("playing", !video.paused);
@@ -66,13 +76,11 @@ function setUpPlayer(player, { autoplay, loop }) {
   };
   tabs.forEach((tab, index) => tab.addEventListener("click", () => select(index, true)));
 
-  const setSpeed = (button) => {
-    speeds.forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
-    video.defaultPlaybackRate = Number(button.dataset.rate);
-    video.playbackRate = video.defaultPlaybackRate;
-  };
-  speeds.forEach((button) => button.addEventListener("click", () => setSpeed(button)));
-  setSpeed(speeds.find((button) => button.getAttribute("aria-pressed") === "true"));
+  speeds.forEach((button) => {
+    button.addEventListener("click", () => setRate(Number(button.dataset.rate)));
+  });
+  const pressed = speeds.find((button) => button.getAttribute("aria-pressed") === "true");
+  setRate(Number(tabs[current].dataset.rate || pressed.dataset.rate));
 
   if (play) {
     const toggle = () => (video.paused ? start() : video.pause());
