@@ -81,11 +81,37 @@
           <a class="button ghost" href="#videos">Videos <span aria-hidden="true">&darr;</span></a>
         </div>
       </div>
-      <figure class="hero-media">
-        <video id="hero-video" muted loop playsinline preload="auto" poster="assets/video/hero.webp" width="720" height="720" aria-label="The final seconds of the test task in each domain">
-          <source src="assets/video/hero.mp4" type="video/mp4">
-        </video>
-        <figcaption><span id="hero-domain">Domino</span>: the last seconds of a recorded test task</figcaption>
+      <figure class="hero-media player" id="hero-player">
+        <div class="player-tabs" role="group" aria-label="Domain">
+          <button type="button" aria-pressed="true" data-video="assets/video/test-domino.mp4" data-poster="assets/video/test-domino.webp" data-caption="the green and purple dominoes stand at right angles, so the cascade has to turn.">Domino</button>
+          <button type="button" aria-pressed="false" data-video="assets/video/test-bridge.mp4" data-poster="assets/video/test-bridge.webp" data-caption="the span has four blocks, one more than in training.">Bridge</button>
+          <button type="button" aria-pressed="false" data-video="assets/video/test-balloons.mp4" data-poster="assets/video/test-balloons.webp" data-caption="the target band is the highest, with four balloons on the rack.">Balloons</button>
+          <button type="button" aria-pressed="false" data-video="assets/video/test-boil.mp4" data-poster="assets/video/test-boil.webp" data-caption="two jugs must boil.">Boil</button>
+          <button type="button" aria-pressed="false" data-video="assets/video/test-fan.mp4" data-poster="assets/video/test-fan.webp" data-caption="the target sits at a new position.">Fan</button>
+        </div>
+        <video id="hero-video" muted playsinline preload="auto" src="assets/video/test-domino.mp4" poster="assets/video/test-domino.webp" width="900" height="900" aria-label="Domino test task"></video>
+        <div class="player-bar">
+          <input class="player-seek" id="hero-seek" type="range" min="0" max="1" step="any" value="0" aria-label="Position in the video">
+          <div class="player-buttons">
+            <button type="button" class="player-button" id="hero-back" aria-label="Back 5 seconds" title="Back 5 seconds">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 6.5v11L3.5 12zM20 6.5v11L12.5 12z"/></svg>
+            </button>
+            <button type="button" class="player-button play" id="hero-play" aria-label="Play" title="Play">
+              <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.8v12.4L18.5 12z"/></svg>
+              <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5h3.4v13H7zM13.6 5.5H17v13h-3.4z"/></svg>
+            </button>
+            <button type="button" class="player-button" id="hero-forward" aria-label="Forward 5 seconds" title="Forward 5 seconds">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 6.5v11l7.5-5.5zM4 6.5v11l7.5-5.5z"/></svg>
+            </button>
+            <span class="player-time" id="hero-time">0:00 / 0:00</span>
+            <div class="player-speed" role="group" aria-label="Playback speed">
+              <button type="button" aria-pressed="true" data-rate="1">1&times;</button>
+              <button type="button" aria-pressed="false" data-rate="2">2&times;</button>
+              <button type="button" aria-pressed="false" data-rate="4">4&times;</button>
+            </div>
+          </div>
+        </div>
+        <figcaption><span id="hero-domain">Domino</span> test task: <span id="hero-caption">the green and purple dominoes stand at right angles, so the cascade has to turn.</span></figcaption>
       </figure>
     </div>
   </div>

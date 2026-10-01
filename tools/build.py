@@ -8,13 +8,15 @@ Sources:
 - One recorded EMPIRIC run per domain from the agent logs (--logs): the
   runs behind the paper's trajectory figures. Each run directory holds
   run.mp4, the harness's recording of every environment step, and
-  agent/sandbox/simulator.py, the program the agent wrote.
+  agent/sandbox/simulator.py, the program the agent wrote. The hero
+  player shows the scene of each run's test task, cut from its video.
 
 Outputs go under assets/. The code listings are written into index.html
 between the <!-- code:NAME --> and <!-- /code:NAME --> markers, so the
 rest of index.html stays hand-edited.
 """
 import argparse
+import json
 import os
 import re
 import shutil
@@ -48,8 +50,18 @@ RERENDERED = Path("/orcd/home/002/ycliang/predicators/logs/paper_run_videos")
 RERENDERED_DOMAINS = ("balloons", "fan")
 # Each recording is 1520x900: the 900x900 scene, then the harness panel.
 SCENE_CROP = "crop=900:900:0:0"
-HERO_SECONDS = 6.0  # each domain's share of the hero loop
 END_TRIM = 0.3  # the last frames repeat the final state
+# The hero player shows each run's test task, the run's last level. The
+# panel opens every level with a banner, a coloured box at its foot
+# (predicators' continual_video.render_panel); this patch samples it.
+BANNER_PATCH = (8, 6, 928, 864)  # width, height, x, y
+PANEL_COLORS = {
+    "level": (110, 170, 255),  # a level opens
+    "won": (90, 200, 120),
+    "over": (235, 90, 90),
+    "reset": (245, 180, 70),
+    "none": (24, 24, 30),  # the panel background: no banner
+}
 
 FIGURES = {
     "fig1_residual.pdf": "teaser",
@@ -129,6 +141,43 @@ def build_robot(paper, out):
     print(f"robot: {len(ROBOT)} photos")
 
 
+def banner_runs(ff, video):
+    """Each run of banner frames in a run video as (kind, first, last),
+    with the video's frame count."""
+    w, h, x, y = BANNER_PATCH
+    raw = subprocess.run([ff, "-v", "error", "-i", str(video), "-vf",
+                          f"crop={w}:{h}:{x}:{y}", "-f", "rawvideo",
+                          "-pix_fmt", "rgb24", "-"],
+                         capture_output=True, check=True).stdout
+    size = w * h * 3
+    kinds = []
+    for k in range(0, len(raw), size):
+        patch = raw[k:k + size]
+        mean = [sum(patch[c::3]) / (w * h) for c in range(3)]
+        kinds.append(min(PANEL_COLORS, key=lambda kind, m=mean: sum(
+            abs(a - b) for a, b in zip(m, PANEL_COLORS[kind]))))
+    runs = []
+    start = 0
+    for i in range(1, len(kinds) + 1):
+        if i == len(kinds) or kinds[i] != kinds[start]:
+            if kinds[start] != "none":
+                runs.append((kinds[start], start, i - 1))
+            start = i
+    return runs, len(kinds)
+
+
+def test_task_start(ff, video, run_dir):
+    """The frame where a run video's test task opens (its last level's
+    banner), checked against the run's scorecard."""
+    card = json.loads((run_dir / "scorecard.json").read_text())
+    levels = [level for level in card["levels"] if level["attempted"]]
+    runs, total = banner_runs(ff, video)
+    starts = [first for kind, first, _ in runs if kind == "level"]
+    assert len(starts) == len(levels), (video, runs)
+    assert levels[-1]["split"] == "test", run_dir
+    return starts[-1], total
+
+
 def video_source(logs, rerendered, name):
     """The run video the page shows for a domain."""
     if name in RERENDERED_DOMAINS:
@@ -137,9 +186,9 @@ def video_source(logs, rerendered, name):
 
 
 def build_videos(ff, logs, rerendered, out):
-    """Copy each run video for streaming, with a poster and a hero clip."""
+    """Copy each run video for streaming, with a poster, and cut its test
+    task's scene for the hero player."""
     out.mkdir(parents=True, exist_ok=True)
-    clips = []
     for name in RUNS:
         src = video_source(logs, rerendered, name)
         length = duration(ff, src)
@@ -152,29 +201,20 @@ def build_videos(ff, logs, rerendered, out):
         poster = Image.open(out / f"{name}.png").convert("RGB")
         poster.save(out / f"{name}.webp", quality=80, method=6)
         (out / f"{name}.png").unlink()
-        clip = out / f"hero-{name}.mp4"
-        start = length - END_TRIM - HERO_SECONDS
-        run([ff, "-v", "error", "-y", "-ss", f"{start:.2f}", "-t",
-             f"{HERO_SECONDS}", "-i", str(src), "-vf",
-             f"{SCENE_CROP},scale=720:720,fps=20", "-an", "-c:v", "libx264",
-             "-preset", "slow", "-crf", "27", "-pix_fmt", "yuv420p",
-             str(clip)])
-        clips.append(clip)
-        print(f"video {name}: {length:.1f} s")
-    listing = out / "hero-list.txt"
-    listing.write_text("".join(f"file '{c.name}'\n" for c in clips))
-    run([ff, "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i",
-         str(listing), "-c", "copy", "-movflags", "+faststart",
-         str(out / "hero.mp4")])
-    first = out / "hero-poster.png"
-    run([ff, "-v", "error", "-y", "-i", str(clips[0]), "-frames:v", "1",
-         str(first)])
-    Image.open(first).convert("RGB").save(out / "hero.webp", quality=80,
-                                          method=6)
-    first.unlink()
-    listing.unlink()
-    for clip in clips:
-        clip.unlink()
+        first, total = test_task_start(ff, src, logs / RUNS[name])
+        clip = out / f"test-{name}.mp4"
+        run([ff, "-v", "error", "-y", "-i", str(src), "-vf",
+             f"trim=start_frame={first},setpts=PTS-STARTPTS,{SCENE_CROP},"
+             "fps=20",
+             "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "26",
+             "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(clip)])
+        run([ff, "-v", "error", "-y", "-i", str(clip), "-frames:v", "1",
+             str(out / f"test-{name}.png")])
+        poster = Image.open(out / f"test-{name}.png").convert("RGB")
+        poster.save(out / f"test-{name}.webp", quality=80, method=6)
+        (out / f"test-{name}.png").unlink()
+        print(f"video {name}: {length:.1f} s, test task from frame {first} "
+              f"of {total} ({(total - first) / 20:.1f} s)")
 
 
 def code_html(lines, start):
