@@ -99,6 +99,10 @@ ROBOT_CLIPS = {
     "robot-experiment-2": ("casc_explore.mp4", 55.3, None),
     "robot-test": ("casc_test.mp4", 0.0, None),
 }
+# The hero player's real-robot clip: the test from the side camera (the
+# left half of casc_test.mp4), cropped square around the blocks, the
+# patch and the arm.
+ROBOT_HERO_CROP = "crop=540:540:120:0"
 # Bridge program excerpts: (first line, last line), 1-based and inclusive.
 EXCERPT = [(1, 21), (112, 139), (210, 241)]
 
@@ -233,7 +237,8 @@ def build_videos(ff, logs, rerendered, out):
 
 
 def build_robot_videos(ff, real_robot, out):
-    """Cut the real-robot run into its experiments and test, with posters."""
+    """Cut the real-robot run into its experiments and test, with posters,
+    and the test's square clip for the hero player."""
     out.mkdir(parents=True, exist_ok=True)
     for name, (source, start, end) in ROBOT_CLIPS.items():
         src = real_robot / source
@@ -249,6 +254,17 @@ def build_robot_videos(ff, real_robot, out):
         poster.save(out / f"{name}.webp", quality=80, method=6)
         (out / f"{name}.png").unlink()
         print(f"robot video {name}: {stop - start:.1f} s")
+    clip = out / "test-robot.mp4"
+    run([ff, "-v", "error", "-y", "-i", str(real_robot / "casc_test.mp4"),
+         "-vf", ROBOT_HERO_CROP, "-an", "-c:v", "libx264", "-preset", "slow",
+         "-crf", "24", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+         str(clip)])
+    run([ff, "-v", "error", "-y", "-i", str(clip), "-frames:v", "1",
+         str(out / "test-robot.png")])
+    poster = Image.open(out / "test-robot.png").convert("RGB")
+    poster.save(out / "test-robot.webp", quality=80, method=6)
+    (out / "test-robot.png").unlink()
+    print(f"robot video test-robot: {duration(ff, clip):.1f} s")
 
 
 def code_html(lines, start):

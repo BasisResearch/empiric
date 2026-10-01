@@ -111,7 +111,7 @@ sup { font-size: 0.68em; line-height: 0; }
 .player { display: grid; gap: 10px; }
 .player-tabs {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   padding: 3px;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px;
@@ -120,10 +120,11 @@ sup { font-size: 0.68em; line-height: 0; }
 .player-tabs button {
   flex: 1 1 0;
   min-height: 30px;
-  padding: 0 8px;
+  padding: 0 7px;
   border: 0;
   border-radius: 7px;
   font: 600 13px/1 var(--sans);
+  white-space: nowrap;
   color: var(--hero-muted);
   background: transparent;
   cursor: pointer;
@@ -351,13 +352,16 @@ pre.code {
 @media (min-width: 981px) and (max-height: 760px) {
   .hero-inner { padding-top: 32px; }
   .hero-grid { grid-template-columns: minmax(0, 1fr) minmax(280px, 360px); }
+  .hero-media .player-tabs button { padding: 0 5px; font-size: 12px; }
 }
 @media (max-width: 380px) {
-  .player-tabs { gap: 2px; }
-  .player-tabs button { padding: 0 4px; font-size: 12px; }
+  .hero-media .player-tabs button { padding: 0 4px; font-size: 12px; }
   .player-buttons { gap: 2px; }
   .player-time { margin-left: 4px; font-size: 12px; }
   .player-speed button { min-width: 28px; padding: 0 4px; }
+}
+@media (max-width: 340px) {
+  .hero-media .player-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) {
   html.smooth-scroll { scroll-behavior: auto; }
