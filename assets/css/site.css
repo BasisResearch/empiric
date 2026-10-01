@@ -210,7 +210,7 @@ sup { font-size: 0.68em; line-height: 0; }
 .player-speed button:hover { color: var(--hero-ink); }
 .player-speed button[aria-pressed="true"] { color: var(--hero-ink); background: rgba(255, 255, 255, 0.16); }
 .hero-media figcaption { font-size: 13px; line-height: 1.55; color: var(--hero-muted); }
-#hero-domain { color: var(--hero-ink); font-weight: 600; }
+.hero-media .player-name { color: var(--hero-ink); font-weight: 600; }
 
 /* Sections */
 .section { max-width: 1180px; margin: 0 auto; padding: 76px 32px; }
@@ -308,6 +308,19 @@ pre.code {
 .code .nd { color: #8a5a1c; }
 
 /* Robot */
+.robot-player { display: grid; gap: 12px; }
+.robot-player-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.robot-player .player-tabs { border-color: var(--line); background: #ffffff; }
+.robot-player .player-tabs button { flex: none; padding: 0 14px; color: var(--muted); }
+.robot-player .player-tabs button:hover { color: var(--ink); background: var(--soft); }
+.robot-player .player-tabs button[aria-pressed="true"] { color: #ffffff; background: var(--accent); }
+.robot-player .player-speed { border-color: var(--line); background: #ffffff; }
+.robot-player .player-speed button { color: var(--muted); }
+.robot-player .player-speed button:hover { color: var(--ink); }
+.robot-player .player-speed button[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent-soft); }
+.robot-player video { width: 100%; aspect-ratio: 1920 / 540; border-radius: 10px; border: 1px solid var(--line); background: var(--ink); }
+.robot-player figcaption { max-width: 90ch; font-size: 15px; line-height: 1.65; color: var(--muted); }
+.robot-player .player-name { color: var(--ink); font-weight: 600; }
 .strip { margin-top: 34px; }
 .strip h3 { font-size: 19px; }
 .strip p { color: var(--muted); font-size: 15px; margin-top: 6px; max-width: 80ch; }

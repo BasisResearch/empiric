@@ -1,5 +1,6 @@
-// The hero player shows each domain's test task, cut from its recorded
-// run by tools/build.py, and moves on to the next domain at the end.
+// A player shows one of several clips, picked with its tab buttons, and
+// moves on to the next clip when one plays to its end. The hero's player
+// draws its own controls; the real-robot video uses the browser's.
 const SKIP_SECONDS = 5;
 
 function clock(seconds) {
@@ -7,17 +8,16 @@ function clock(seconds) {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
 }
 
-function setUpHero() {
-  const player = document.getElementById("hero-player");
+function setUpPlayer(player, { autoplay, loop }) {
   if (!player) return;
-  const video = document.getElementById("hero-video");
+  const video = player.querySelector("video");
   const tabs = [...player.querySelectorAll(".player-tabs button")];
   const speeds = [...player.querySelectorAll(".player-speed button")];
-  const play = document.getElementById("hero-play");
-  const seek = document.getElementById("hero-seek");
-  const time = document.getElementById("hero-time");
-  const domain = document.getElementById("hero-domain");
-  const caption = document.getElementById("hero-caption");
+  const name = player.querySelector(".player-name");
+  const caption = player.querySelector(".player-caption");
+  const play = player.querySelector(".player-play");
+  const seek = player.querySelector(".player-seek");
+  const time = player.querySelector(".player-time");
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let current = 0;
   let scrubbing = false;
@@ -31,9 +31,9 @@ function setUpHero() {
       // Autoplay can be refused; the poster stays up.
     });
   };
-  const toggle = () => (video.paused ? start() : video.pause());
 
   const show = () => {
+    if (!seek) return;
     const length = Number.isFinite(video.duration) ? video.duration : 0;
     const at = scrubbing ? Number(seek.value) : Math.min(video.currentTime, length);
     seek.max = String(length || 1);
@@ -52,25 +52,20 @@ function setUpHero() {
     show();
   };
 
-  const select = (index, autoplay) => {
+  const select = (index, autoplayNext) => {
     current = index;
     const tab = tabs[index];
     tabs.forEach((other) => other.setAttribute("aria-pressed", String(other === tab)));
     video.poster = tab.dataset.poster;
     video.src = tab.dataset.video;
-    video.setAttribute("aria-label", `${tab.textContent} test task`);
-    domain.textContent = tab.textContent;
+    name.textContent = tab.textContent;
     caption.textContent = tab.dataset.caption;
     player.classList.toggle("playing", !video.paused);
     show();
-    if (autoplay) start();
+    if (autoplayNext) start();
   };
-
   tabs.forEach((tab, index) => tab.addEventListener("click", () => select(index, true)));
-  play.addEventListener("click", toggle);
-  video.addEventListener("click", toggle);
-  document.getElementById("hero-back").addEventListener("click", () => skip(-SKIP_SECONDS));
-  document.getElementById("hero-forward").addEventListener("click", () => skip(SKIP_SECONDS));
+
   const setSpeed = (button) => {
     speeds.forEach((other) => other.setAttribute("aria-pressed", String(other === button)));
     video.defaultPlaybackRate = Number(button.dataset.rate);
@@ -79,28 +74,37 @@ function setUpHero() {
   speeds.forEach((button) => button.addEventListener("click", () => setSpeed(button)));
   setSpeed(speeds.find((button) => button.getAttribute("aria-pressed") === "true"));
 
-  seek.addEventListener("pointerdown", () => { scrubbing = true; });
-  ["pointerup", "pointercancel", "change"].forEach((name) => {
-    seek.addEventListener(name, () => {
-      scrubbing = false;
+  if (play) {
+    const toggle = () => (video.paused ? start() : video.pause());
+    play.addEventListener("click", toggle);
+    video.addEventListener("click", toggle);
+    player.querySelector(".player-back").addEventListener("click", () => skip(-SKIP_SECONDS));
+    player.querySelector(".player-forward").addEventListener("click", () => skip(SKIP_SECONDS));
+    seek.addEventListener("pointerdown", () => { scrubbing = true; });
+    ["pointerup", "pointercancel", "change"].forEach((type) => {
+      seek.addEventListener(type, () => {
+        scrubbing = false;
+        show();
+      });
+    });
+    seek.addEventListener("input", () => {
+      video.currentTime = Number(seek.value);
       show();
     });
-  });
-  seek.addEventListener("input", () => {
-    video.currentTime = Number(seek.value);
-    show();
-  });
-  seek.addEventListener("keydown", (event) => {
-    const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1,
-      PageDown: -SKIP_SECONDS, PageUp: SKIP_SECONDS }[event.key];
-    if (step === undefined) return;
-    event.preventDefault();
-    skip(step);
-  });
+    seek.addEventListener("keydown", (event) => {
+      const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1,
+        PageDown: -SKIP_SECONDS, PageUp: SKIP_SECONDS }[event.key];
+      if (step === undefined) return;
+      event.preventDefault();
+      skip(step);
+    });
+    ["loadedmetadata", "seeked", "timeupdate"].forEach((type) => video.addEventListener(type, show));
+  }
 
   video.addEventListener("play", () => {
     ranOut = false;
     player.classList.add("playing");
+    if (!play) return;
     play.setAttribute("aria-label", "Pause");
     play.title = "Pause";
     if (!frame) frame = requestAnimationFrame(tick);
@@ -108,17 +112,19 @@ function setUpHero() {
   video.addEventListener("pause", () => {
     ranOut = video.ended;
     player.classList.remove("playing");
+    if (!play) return;
     play.setAttribute("aria-label", "Play");
     play.title = "Play";
     show();
   });
-  ["loadedmetadata", "seeked", "timeupdate"].forEach((name) => video.addEventListener(name, show));
   video.addEventListener("ended", () => {
-    if (ranOut) select((current + 1) % tabs.length, !still);
+    if (!ranOut) return;
+    if (current + 1 < tabs.length) select(current + 1, !still);
+    else if (loop) select(0, !still);
   });
 
   show();
-  if (!still) start();
+  if (autoplay && !still) start();
 }
 
 function setUpRunVideos() {
@@ -172,7 +178,8 @@ function setUpCopy() {
   });
 }
 
-setUpHero();
+setUpPlayer(document.getElementById("hero-player"), { autoplay: true, loop: true });
+setUpPlayer(document.getElementById("robot-player"), { autoplay: false, loop: false });
 setUpRunVideos();
 setUpSmoothScroll();
 setUpCopy();

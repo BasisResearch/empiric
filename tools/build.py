@@ -11,6 +11,10 @@ Sources:
   agent/sandbox/simulator.py, the program the agent wrote. The hero
   player shows the scene of each run's test task, cut from its video.
 
+- The real-robot Fan-Domino run (exp_20260922_134142) from the robot's
+  logs (--real-robot): casc_explore.mp4 holds its two experiments and
+  casc_test.mp4 its test, both cameras side by side.
+
 Outputs go under assets/. The code listings are written into index.html
 between the <!-- code:NAME --> and <!-- /code:NAME --> markers, so the
 rest of index.html stays hand-edited.
@@ -33,6 +37,8 @@ from pygments.lexers import PythonLexer  # pylint: disable=import-error
 SITE = Path(__file__).resolve().parents[1]
 PAPER = Path("/orcd/home/002/ycliang/sim-predicator-paper")
 LOGS = Path("/orcd/home/002/ycliang/predicators/logs/agent_continual")
+REAL_ROBOT = Path(
+    "/orcd/home/002/ycliang/predicators/logs/real_robot/fan_domino_drive")
 
 # Domain -> recorded run, in the order the page shows them.
 RUNS = {
@@ -84,6 +90,15 @@ ROBOT = [
     "fan_cascade/12_green_toppling.jpg",
     "fan_cascade/13_green_in_new_target.jpg",
 ]
+# The real-robot clips: (source, start, end) in seconds, end None for the
+# source's end. Experiment 2 opens at 55.3 s, where the run's captioned cut
+# (casc_captioned.mp4, 3.5 s later after its title card) starts the
+# "episode 2 / park" caption.
+ROBOT_CLIPS = {
+    "robot-experiment-1": ("casc_explore.mp4", 0.0, 55.3),
+    "robot-experiment-2": ("casc_explore.mp4", 55.3, None),
+    "robot-test": ("casc_test.mp4", 0.0, None),
+}
 # Bridge program excerpts: (first line, last line), 1-based and inclusive.
 EXCERPT = [(1, 21), (112, 139), (210, 241)]
 
@@ -217,6 +232,25 @@ def build_videos(ff, logs, rerendered, out):
               f"of {total} ({(total - first) / 20:.1f} s)")
 
 
+def build_robot_videos(ff, real_robot, out):
+    """Cut the real-robot run into its experiments and test, with posters."""
+    out.mkdir(parents=True, exist_ok=True)
+    for name, (source, start, end) in ROBOT_CLIPS.items():
+        src = real_robot / source
+        stop = duration(ff, src) if end is None else end
+        clip = out / f"{name}.mp4"
+        run([ff, "-v", "error", "-y", "-ss", f"{start:.2f}", "-i", str(src),
+             "-t", f"{stop - start:.2f}", "-an", "-c:v", "libx264",
+             "-preset", "slow", "-crf", "27", "-pix_fmt", "yuv420p",
+             "-movflags", "+faststart", str(clip)])
+        run([ff, "-v", "error", "-y", "-i", str(clip), "-frames:v", "1",
+             str(out / f"{name}.png")])
+        poster = Image.open(out / f"{name}.png").convert("RGB")
+        poster.save(out / f"{name}.webp", quality=80, method=6)
+        (out / f"{name}.png").unlink()
+        print(f"robot video {name}: {stop - start:.1f} s")
+
+
 def code_html(lines, start):
     """Highlight lines of Python with line numbers from `start`."""
     formatter = HtmlFormatter(nowrap=True)
@@ -256,8 +290,10 @@ def main():
     parser.add_argument("--paper", type=Path, default=PAPER)
     parser.add_argument("--logs", type=Path, default=LOGS)
     parser.add_argument("--rerendered", type=Path, default=RERENDERED)
+    parser.add_argument("--real-robot", type=Path, default=REAL_ROBOT)
     parser.add_argument("--ffmpeg")
-    parser.add_argument("--only", choices=["figures", "robot", "videos", "code"])
+    parser.add_argument("--only", choices=["figures", "robot", "videos",
+                                           "robot-videos", "code"])
     args = parser.parse_args()
     steps = {
         "figures": lambda: build_figures(args.paper, SITE / "assets" / "img"),
@@ -265,6 +301,9 @@ def main():
         "videos": lambda: build_videos(ffmpeg_path(args.ffmpeg), args.logs,
                                        args.rerendered,
                                        SITE / "assets" / "video"),
+        "robot-videos": lambda: build_robot_videos(
+            ffmpeg_path(args.ffmpeg), args.real_robot,
+            SITE / "assets" / "video"),
         "code": lambda: build_code(args.logs, SITE / "index.html"),
     }
     for name, step in steps.items():

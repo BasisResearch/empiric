@@ -21,8 +21,9 @@ Domino, Bridge and Boil use each run's own `run.mp4`.
 Balloons and Fan use videos drawn from the recorded states in the current scene layouts, which predicators' `scripts/paper_figures/render_run_videos.py` writes to `logs/paper_run_videos`.
 The build writes the figure images, the run videos with their posters, the test-task clips the hero player shows, and the Bridge program.
 Each test-task clip is the scene of its run's last level, found from the level banners in the harness panel and checked against the run's `scorecard.json`.
+The real-robot clips come from the Fan-Domino run's two-camera videos in predicators' `logs/real_robot/fan_domino_drive`: `casc_explore.mp4` is cut into its two experiments, and `casc_test.mp4` is the test.
 It also rewrites the two code listings in `index.html` between their `<!-- code:... -->` markers; the rest of the page is untouched.
-Pass `--only figures|robot|videos|code` to rebuild one part, and `--paper`, `--logs`, `--rerendered` or `--ffmpeg` to change where it looks.
+Pass `--only figures|robot|videos|robot-videos|code` to rebuild one part, and `--paper`, `--logs`, `--rerendered`, `--real-robot` or `--ffmpeg` to change where it looks.
 Without a system ffmpeg, it uses the one bundled with the `imageio-ffmpeg` Python package.
 
 ## Paper

@@ -89,21 +89,21 @@
           <button type="button" aria-pressed="false" data-video="assets/video/test-boil.mp4" data-poster="assets/video/test-boil.webp" data-caption="two jugs must boil.">Boil</button>
           <button type="button" aria-pressed="false" data-video="assets/video/test-fan.mp4" data-poster="assets/video/test-fan.webp" data-caption="the target sits at a new position.">Fan</button>
         </div>
-        <video id="hero-video" muted playsinline preload="auto" src="assets/video/test-domino.mp4" poster="assets/video/test-domino.webp" width="900" height="900" aria-label="Domino test task"></video>
+        <video muted playsinline preload="auto" src="assets/video/test-domino.mp4" poster="assets/video/test-domino.webp" width="900" height="900" aria-labelledby="hero-label"></video>
         <div class="player-bar">
-          <input class="player-seek" id="hero-seek" type="range" min="0" max="1" step="any" value="0" aria-label="Position in the video">
+          <input class="player-seek" type="range" min="0" max="1" step="any" value="0" aria-label="Position in the video">
           <div class="player-buttons">
-            <button type="button" class="player-button" id="hero-back" aria-label="Back 5 seconds" title="Back 5 seconds">
+            <button type="button" class="player-button player-back" aria-label="Back 5 seconds" title="Back 5 seconds">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 6.5v11L3.5 12zM20 6.5v11L12.5 12z"/></svg>
             </button>
-            <button type="button" class="player-button play" id="hero-play" aria-label="Play" title="Play">
+            <button type="button" class="player-button play player-play" aria-label="Play" title="Play">
               <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.8v12.4L18.5 12z"/></svg>
               <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5h3.4v13H7zM13.6 5.5H17v13h-3.4z"/></svg>
             </button>
-            <button type="button" class="player-button" id="hero-forward" aria-label="Forward 5 seconds" title="Forward 5 seconds">
+            <button type="button" class="player-button player-forward" aria-label="Forward 5 seconds" title="Forward 5 seconds">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 6.5v11l7.5-5.5zM4 6.5v11l7.5-5.5z"/></svg>
             </button>
-            <span class="player-time" id="hero-time">0:00 / 0:00</span>
+            <span class="player-time">0:00 / 0:00</span>
             <div class="player-speed" role="group" aria-label="Playback speed">
               <button type="button" aria-pressed="false" data-rate="1">1&times;</button>
               <button type="button" aria-pressed="true" data-rate="2">2&times;</button>
@@ -111,7 +111,7 @@
             </div>
           </div>
         </div>
-        <figcaption><span id="hero-domain">Domino</span> test task: <span id="hero-caption">the green and purple dominoes stand at right angles, so the cascade has to turn.</span></figcaption>
+        <figcaption id="hero-label"><span class="player-name">Domino</span> test task: <span class="player-caption">the green and purple dominoes stand at right angles, so the cascade has to turn.</span></figcaption>
       </figure>
     </div>
   </div>
@@ -675,6 +675,22 @@
         <p>From two gusts, EMPIRIC learns a wind force that decays after the fan stops and infers both masses. Its model predicts that no placement of the green domino alone reaches the new patch, so the agent stands the gray domino upwind, where its fall knocks the green one in. The predicted slide of 10.1&nbsp;&plusmn;&nbsp;2.3&nbsp;cm matches the measured 9.9&nbsp;cm.</p>
       </div>
     </div>
+    <figure class="robot-player" id="robot-player">
+      <div class="robot-player-top">
+        <div class="player-tabs" role="group" aria-label="Part of the run">
+          <button type="button" aria-pressed="true" data-video="assets/video/robot-experiment-1.mp4" data-poster="assets/video/robot-experiment-1.webp" data-caption="The robot stands the green block 0.25&nbsp;m downwind of the fan, where its model&rsquo;s predictions disagree most, and presses the fan button. The gust leaves the green block standing.">Experiment 1</button>
+          <button type="button" aria-pressed="false" data-video="assets/video/robot-experiment-2.mp4" data-poster="assets/video/robot-experiment-2.webp" data-caption="The robot moves the green block out of the wind, stands the gray block where the green one stood, and presses the button. The gray block slides 12.1&nbsp;cm and lands flat in the patch, so it is the lighter one.">Experiment 2</button>
+          <button type="button" aria-pressed="false" data-video="assets/video/robot-test.mp4" data-poster="assets/video/robot-test.webp" data-caption="With the patch moved to 0.51&nbsp;m, the robot stands the green block at 0.375&nbsp;m and the gray block 17.5&nbsp;cm upwind of it. One gust knocks the gray block into the green one, which slides 9.9&nbsp;cm, against a predicted 10.1&nbsp;&plusmn;&nbsp;2.3&nbsp;cm, and lands flat in the patch.">Test</button>
+        </div>
+        <div class="player-speed" role="group" aria-label="Playback speed">
+          <button type="button" aria-pressed="false" data-rate="1">1&times;</button>
+          <button type="button" aria-pressed="true" data-rate="2">2&times;</button>
+          <button type="button" aria-pressed="false" data-rate="4">4&times;</button>
+        </div>
+      </div>
+      <video controls muted playsinline preload="none" src="assets/video/robot-experiment-1.mp4" poster="assets/video/robot-experiment-1.webp" width="1920" height="540" aria-labelledby="robot-label"></video>
+      <figcaption id="robot-label"><span class="player-name">Experiment 1</span>: <span class="player-caption">The robot stands the green block 0.25&nbsp;m downwind of the fan, where its model&rsquo;s predictions disagree most, and presses the fan button. The gust leaves the green block standing.</span></figcaption>
+    </figure>
     <div class="strip">
       <h3>Experiments</h3>
       <p>The green block before and after a gust, then the gray block before and after. The green block stays upright; the gray block falls into the target.</p>
