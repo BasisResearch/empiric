@@ -48,12 +48,13 @@ RUNS = {
     "boil": "boil-mb_opus_gate_preflight_two_jug_tight_r1/seed1/run_20260917_082805",
     "fan": "fan_ramp-mb_opus_ramp_skill_repair_r1/seed2/run_20260921_090827",
 }
-# The Balloons and Fan scenes changed after their runs were recorded.
-# Their videos are drawn from the recorded states in the current layouts
-# by predicators' scripts/paper_figures/render_run_videos.py; the other
-# domains use the harness's own run.mp4.
-RERENDERED = Path("/orcd/home/002/ycliang/predicators/logs/paper_run_videos")
-RERENDERED_DOMAINS = ("balloons", "fan")
+# Every run video is rendered with Blender Cycles from the run's recorded
+# states, as the paper figures are, with the harness panel beside it:
+# predicators' scripts/paper_figures/export_run_video_scenes.py,
+# render_cycles_frames.py and compose_cycles_video.py write
+# <domain>/<domain>.mp4 here. The harness's own run.mp4 uses PyBullet's
+# renderer, and Balloons and Fan have moved to new layouts since.
+CYCLES = Path("/orcd/home/002/ycliang/predicators/logs/paper_run_videos_cycles")
 # Each recording is 1520x900: the 900x900 scene, then the harness panel.
 SCENE_CROP = "crop=900:900:0:0"
 END_TRIM = 0.3  # the last frames repeat the final state
@@ -197,19 +198,17 @@ def test_task_start(ff, video, run_dir):
     return starts[-1], total
 
 
-def video_source(logs, rerendered, name):
+def video_source(cycles, name):
     """The run video the page shows for a domain."""
-    if name in RERENDERED_DOMAINS:
-        return rerendered / f"{name}.mp4"
-    return logs / RUNS[name] / "run.mp4"
+    return cycles / name / f"{name}.mp4"
 
 
-def build_videos(ff, logs, rerendered, out):
+def build_videos(ff, logs, cycles, out):
     """Copy each run video for streaming, with a poster, and cut its test
     task's scene for the hero player."""
     out.mkdir(parents=True, exist_ok=True)
     for name in RUNS:
-        src = video_source(logs, rerendered, name)
+        src = video_source(cycles, name)
         length = duration(ff, src)
         # A stream copy keeps the recording as it is; faststart lets
         # browsers begin playback before the whole file arrives.
@@ -305,7 +304,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--paper", type=Path, default=PAPER)
     parser.add_argument("--logs", type=Path, default=LOGS)
-    parser.add_argument("--rerendered", type=Path, default=RERENDERED)
+    parser.add_argument("--cycles", type=Path, default=CYCLES)
     parser.add_argument("--real-robot", type=Path, default=REAL_ROBOT)
     parser.add_argument("--ffmpeg")
     parser.add_argument("--only", choices=["figures", "robot", "videos",
@@ -315,7 +314,7 @@ def main():
         "figures": lambda: build_figures(args.paper, SITE / "assets" / "img"),
         "robot": lambda: build_robot(args.paper, SITE / "assets" / "img" / "robot"),
         "videos": lambda: build_videos(ffmpeg_path(args.ffmpeg), args.logs,
-                                       args.rerendered,
+                                       args.cycles,
                                        SITE / "assets" / "video"),
         "robot-videos": lambda: build_robot_videos(
             ffmpeg_path(args.ffmpeg), args.real_robot,
