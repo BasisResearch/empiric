@@ -1,8 +1,8 @@
 // A player shows one of several clips, picked with its tab buttons, and
 // moves on to the next clip when one plays to its end. A tab's data-rate is
 // the speed its clip starts at; without one the speed carries over. The
-// hero's player draws its own controls; the real-robot video uses the
-// browser's.
+// hero's player draws its own controls, with a link that downloads the clip
+// on screen; the real-robot video uses the browser's.
 const SKIP_SECONDS = 5;
 
 function clock(seconds) {
@@ -20,6 +20,7 @@ function setUpPlayer(player, { autoplay, loop }) {
   const play = player.querySelector(".player-play");
   const seek = player.querySelector(".player-seek");
   const time = player.querySelector(".player-time");
+  const download = player.querySelector(".player-download");
   const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let current = 0;
   let scrubbing = false;
@@ -70,6 +71,13 @@ function setUpPlayer(player, { autoplay, loop }) {
     if (tab.dataset.rate) setRate(Number(tab.dataset.rate));
     name.textContent = tab.textContent;
     caption.textContent = tab.dataset.caption;
+    if (download) {
+      // The download link follows the clip on screen.
+      const label = tab.textContent.trim();
+      download.href = tab.dataset.video;
+      download.download = `empiric-${label.toLowerCase().replace(/\s+/g, "-")}.mp4`;
+      download.setAttribute("aria-label", `Download the ${label} video`);
+    }
     player.classList.toggle("playing", !video.paused);
     show();
     if (autoplayNext) start();

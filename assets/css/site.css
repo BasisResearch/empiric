@@ -210,6 +210,7 @@ sup { font-size: 0.68em; line-height: 0; }
 }
 .player-speed button:hover { color: var(--hero-ink); }
 .player-speed button[aria-pressed="true"] { color: var(--hero-ink); background: rgba(255, 255, 255, 0.16); }
+.player-download { flex: none; text-decoration: none; }
 .hero-media figcaption { font-size: 13px; line-height: 1.55; color: var(--hero-muted); }
 .hero-media .player-name { color: var(--hero-ink); font-weight: 600; }
 
@@ -364,6 +365,10 @@ pre.code {
 }
 @media (max-width: 340px) {
   .hero-media .player-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Room for the download link beside the speeds. */
+  .player-button { width: 28px; height: 28px; }
+  .player-button svg { width: 18px; height: 18px; }
+  .player-time { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html.smooth-scroll { scroll-behavior: auto; }
