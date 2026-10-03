@@ -91,7 +91,7 @@ sup { font-size: 0.68em; line-height: 0; }
 .affiliations { gap: 2px 16px; margin-top: 14px; font-size: 14px; color: var(--hero-muted); }
 .equal { margin-top: 6px; font-size: 14px; color: var(--hero-muted); }
 .hero-summary { margin-top: 26px; font-size: 18px; line-height: 1.65; color: var(--hero-ink); }
-.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 30px; }
 .button {
   display: inline-flex;
   align-items: center;
