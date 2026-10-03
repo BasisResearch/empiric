@@ -62,6 +62,9 @@ sup { font-size: 0.68em; line-height: 0; }
 .nav-sections a[aria-current="true"] { color: var(--ink); text-decoration: underline 2px var(--accent); text-underline-offset: 8px; }
 .nav-links { display: flex; gap: 8px; margin-left: auto; }
 .nav-button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
   font-size: 13px;
   font-weight: 600;
   padding: 6px 12px;
@@ -70,6 +73,8 @@ sup { font-size: 0.68em; line-height: 0; }
   color: var(--ink);
 }
 .nav-button:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+.nav-note { font-weight: 500; color: var(--muted); }
+.nav-button:hover .nav-note { color: inherit; }
 
 /* Hero */
 .hero {
@@ -331,6 +336,8 @@ pre.code {
   .cards.three, .stats { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
+  /* Phones keep the short link names. */
+  .nav-note { display: none; }
   .tab-player .player-tabs button { padding: 0 10px; }
   .hero-inner { padding: 40px 16px 48px; }
   .section { padding: 52px 16px; }
@@ -373,6 +380,11 @@ pre.code {
   .hero-theater .tab-name { font-size: 15px; line-height: 1.25; }
   .hero-theater .tab-caption { display: block; font-size: 13px; font-weight: 400; line-height: 1.5; color: var(--hero-muted); }
   .hero-theater .player-tabs button[aria-pressed="true"] { color: #ffffff; background: rgba(255, 255, 255, 0.1); border-left-color: #c9b6f0; }
+}
+@media (min-width: 981px) and (max-width: 1120px) {
+  /* Room for the section links beside the three header links. */
+  .nav { gap: 20px; }
+  .nav-sections { gap: 16px; }
 }
 @media (min-width: 981px) and (max-width: 1199px) {
   /* Narrower screens keep the caption of the run on screen only. */
