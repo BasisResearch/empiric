@@ -59,6 +59,7 @@ sup { font-size: 0.68em; line-height: 0; }
 .nav-sections { display: flex; gap: 22px; font-size: 14px; margin-right: auto; }
 .nav-sections a { color: var(--muted); }
 .nav-sections a:hover { color: var(--ink); text-decoration: none; }
+.nav-sections a[aria-current="true"] { color: var(--ink); text-decoration: underline 2px var(--accent); text-underline-offset: 8px; }
 .nav-links { display: flex; gap: 8px; margin-left: auto; }
 .nav-button {
   font-size: 13px;
@@ -217,16 +218,29 @@ sup { font-size: 0.68em; line-height: 0; }
 /* Sections */
 .section { max-width: 1180px; margin: 0 auto; padding: 76px 32px; }
 .band { background: var(--soft); border-block: 1px solid var(--line); }
-.section-heading { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 48px; margin-bottom: 36px; }
-.lead { display: grid; gap: 14px; }
-.lead p { color: var(--muted); max-width: 68ch; }
-.lead em { color: var(--ink); }
+/* Every section reads top to bottom at the full width: a numbered label,
+   the title, a short deck, then its figures, cards and players. */
+.section-head { display: grid; gap: 10px; margin-bottom: 32px; }
+.eyebrow {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.eyebrow .num { font-family: var(--mono); font-weight: 500; letter-spacing: 0; color: var(--muted); }
+.deck { margin-top: 4px; font-size: clamp(17px, 1.3vw, 19px); line-height: 1.65; color: #3b4152; }
+.deck em, .cards em { color: var(--ink); }
+.body-text { margin-top: 26px; font-size: 16px; color: var(--muted); }
 .subheading { font-size: 22px; margin-top: 64px; }
-.subtext { color: var(--muted); max-width: 72ch; margin-top: 10px; }
+.subtext { color: var(--muted); margin-top: 10px; }
 
 .figure { margin-top: 28px; }
 .figure img { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
-.figure figcaption { margin-top: 12px; max-width: 90ch; font-size: 14px; line-height: 1.65; color: var(--muted); }
+.figure figcaption { margin-top: 12px; font-size: 14px; line-height: 1.65; color: var(--muted); }
 .figure figcaption strong { color: var(--ink); font-weight: 600; }
 
 /* Videos */
@@ -241,6 +255,7 @@ select {
 
 /* Cards and stats */
 .cards { display: grid; gap: 22px; margin-top: 34px; }
+.cards.points { margin-top: 0; margin-bottom: 8px; }
 .cards.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .cards article { padding-top: 16px; border-top: 2px solid var(--accent); }
 .cards h3 { margin-bottom: 8px; }
@@ -298,7 +313,7 @@ pre.code {
 /* Robot */
 .tab-player { display: grid; gap: 12px; }
 .tab-player-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
-.tab-player .player-tabs { border-color: var(--line); background: #ffffff; }
+.tab-player .player-tabs { flex-wrap: wrap; border-color: var(--line); background: #ffffff; }
 .tab-player .player-tabs button { flex: none; padding: 0 14px; color: var(--muted); }
 .tab-player .player-tabs button:hover { color: var(--ink); background: var(--soft); }
 .tab-player .player-tabs button[aria-pressed="true"] { color: #ffffff; background: var(--accent); }
@@ -307,14 +322,15 @@ pre.code {
 .tab-player .player-speed button:hover { color: var(--ink); }
 .tab-player .player-speed button[aria-pressed="true"] { color: var(--accent-ink); background: var(--accent-soft); }
 .tab-player video { width: 100%; border-radius: 10px; border: 1px solid var(--line); background: var(--ink); }
+#robot-player { margin-top: 28px; }
 #robot-player video { aspect-ratio: 1920 / 540; }
 #runs-player video { aspect-ratio: 1520 / 900; }
-.tab-player figcaption { max-width: 90ch; font-size: 15px; line-height: 1.65; color: var(--muted); }
+.tab-player figcaption { font-size: 15px; line-height: 1.65; color: var(--muted); }
 .tab-player .player-name { color: var(--ink); font-weight: 600; }
 .player-learned { display: block; margin-top: 10px; padding-left: 12px; border-left: 3px solid var(--accent); color: var(--ink); }
 .strip { margin-top: 34px; }
 .strip h3 { font-size: 19px; }
-.strip p { color: var(--muted); font-size: 15px; margin-top: 6px; max-width: 80ch; }
+.strip p { color: var(--muted); font-size: 15px; margin-top: 6px; }
 .frames { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
 .frames img { width: 100%; border-radius: 8px; border: 1px solid var(--line); }
 
@@ -327,10 +343,10 @@ pre.code {
   .nav-sections { display: none; }
   .hero-grid { grid-template-columns: 1fr; }
   .hero-media { max-width: 420px; }
-  .section-heading { grid-template-columns: 1fr; gap: 16px; }
   .cards.three, .stats { grid-template-columns: 1fr; }
 }
 @media (max-width: 620px) {
+  .tab-player .player-tabs button { padding: 0 10px; }
   .hero-inner { padding: 40px 16px 48px; }
   .section { padding: 52px 16px; }
   .footer-inner { padding-inline: 16px; }

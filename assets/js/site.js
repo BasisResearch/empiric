@@ -157,6 +157,39 @@ function setUpSmoothScroll() {
   }
 }
 
+function setUpSectionNav() {
+  // The navigation marks the section being read: the last one whose top has
+  // passed just below the bar, or the last section once the page ends.
+  const links = [...document.querySelectorAll(".nav-sections a")];
+  const pairs = links
+    .map((link) => [link, document.getElementById(link.getAttribute("href").slice(1))])
+    .filter(([, section]) => section);
+  if (!pairs.length) return;
+  let queued = false;
+  const update = () => {
+    queued = false;
+    const root = document.documentElement;
+    const atEnd = window.innerHeight + window.scrollY >= root.scrollHeight - 2;
+    let current = null;
+    pairs.forEach(([link, section]) => {
+      if (section.getBoundingClientRect().top <= 120) current = link;
+    });
+    if (atEnd) current = pairs[pairs.length - 1][0];
+    links.forEach((link) => {
+      if (link === current) link.setAttribute("aria-current", "true");
+      else link.removeAttribute("aria-current");
+    });
+  };
+  const queue = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(update);
+  };
+  window.addEventListener("scroll", queue, { passive: true });
+  window.addEventListener("resize", queue);
+  update();
+}
+
 function setUpCopy() {
   const button = document.getElementById("copy-bibtex");
   const source = document.getElementById("bibtex");
@@ -180,4 +213,5 @@ setUpPlayer(document.getElementById("hero-player"), { autoplay: true, loop: true
 setUpPlayer(document.getElementById("robot-player"), { autoplay: false, loop: false });
 setUpPlayer(document.getElementById("runs-player"), { autoplay: false, loop: false });
 setUpSmoothScroll();
+setUpSectionNav();
 setUpCopy();
