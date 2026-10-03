@@ -355,6 +355,8 @@ pre.code {
   .hero-media .player-tabs button { padding: 0 5px; font-size: 12px; }
 }
 @media (max-width: 380px) {
+  /* The wordmark takes its own row, so the footer links wrap as one line. */
+  .footer-inner span { flex-basis: 100%; }
   .hero-media .player-tabs button { padding: 0 4px; font-size: 12px; }
   .player-buttons { gap: 2px; }
   .player-time { margin-left: 4px; font-size: 12px; }
