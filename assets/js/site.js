@@ -2,7 +2,7 @@
 // moves on to the next clip when one plays to its end. A tab's data-rate is
 // the speed its clip starts at; without one the speed carries over. The
 // hero's player draws its own controls, with a link that downloads the clip
-// on screen; the real-robot video uses the browser's.
+// on screen; the real-robot and full-recording players use the browser's.
 const SKIP_SECONDS = 5;
 
 function clock(seconds) {
@@ -17,6 +17,7 @@ function setUpPlayer(player, { autoplay, loop }) {
   const speeds = [...player.querySelectorAll(".player-speed button")];
   const name = player.querySelector(".player-name");
   const caption = player.querySelector(".player-caption");
+  const learned = player.querySelector(".player-learned");
   const play = player.querySelector(".player-play");
   const seek = player.querySelector(".player-seek");
   const time = player.querySelector(".player-time");
@@ -71,6 +72,7 @@ function setUpPlayer(player, { autoplay, loop }) {
     if (tab.dataset.rate) setRate(Number(tab.dataset.rate));
     name.textContent = tab.textContent;
     caption.textContent = tab.dataset.caption;
+    if (learned) learned.textContent = tab.dataset.learned || "";
     if (download) {
       // The download link follows the clip on screen.
       const label = tab.textContent.trim();
@@ -143,26 +145,6 @@ function setUpPlayer(player, { autoplay, loop }) {
   if (autoplay && !still) start();
 }
 
-function setUpRunVideos() {
-  const select = document.getElementById("speed");
-  const videos = [...document.querySelectorAll(".run-video")];
-  const apply = (video) => {
-    const rate = Number(select.value);
-    video.defaultPlaybackRate = rate;
-    video.playbackRate = rate;
-  };
-  select.addEventListener("change", () => videos.forEach(apply));
-  videos.forEach((video) => {
-    apply(video);
-    video.addEventListener("loadedmetadata", () => apply(video));
-    video.addEventListener("play", () => {
-      apply(video);
-      // Play one run at a time.
-      videos.forEach((other) => { if (other !== video) other.pause(); });
-    });
-  });
-}
-
 function setUpSmoothScroll() {
   // Smooth scrolling waits for load. The browser jumps to the address's
   // #section while the web fonts load and shift the sections above it; an
@@ -196,6 +178,6 @@ function setUpCopy() {
 
 setUpPlayer(document.getElementById("hero-player"), { autoplay: true, loop: true });
 setUpPlayer(document.getElementById("robot-player"), { autoplay: false, loop: false });
-setUpRunVideos();
+setUpPlayer(document.getElementById("runs-player"), { autoplay: false, loop: false });
 setUpSmoothScroll();
 setUpCopy();

@@ -25,11 +25,11 @@
   <a class="wordmark" href="#top">EMPIRIC</a>
   <nav class="nav-sections" aria-label="Sections">
     <a href="#overview">Overview</a>
-    <a href="#videos">Videos</a>
     <a href="#method">Method</a>
-    <a href="#program">Program</a>
     <a href="#results">Results</a>
     <a href="#robot">Robot</a>
+    <a href="#videos">Videos</a>
+    <a href="#program">Program</a>
     <a href="#citation">Citation</a>
   </nav>
   <div class="nav-links">
@@ -137,113 +137,164 @@
   </figure>
 </section>
 
-<section class="band" id="videos" aria-labelledby="videos-title">
+<section class="band" id="method" aria-labelledby="method-title">
   <div class="section">
     <div class="section-heading">
-      <h2 id="videos-title">Recorded runs</h2>
+      <h2 id="method-title">How EMPIRIC learns and plans</h2>
       <div class="lead">
-        <p>Each video shows one complete EMPIRIC run: the training tasks, where the agent experiments, then the test task. The panel beside the scene shows the goal, the skill the agent is running with the reason it gave, and the steps used so far.</p>
+        <p>A coding agent starts from a base simulator of generic rigid-body physics and extends it with code for novel physical mechanisms. The engine provides reusable knowledge of motion and contact, so learning can focus on the physics it lacks.</p>
       </div>
     </div>
-    <div class="toolbar">
-      <label for="speed">Playback speed</label>
-      <select id="speed">
-        <option value="1">1&times;</option>
-        <option value="2" selected>2&times;</option>
-        <option value="4">4&times;</option>
-        <option value="8">8&times;</option>
-      </select>
-    </div>
-    <div class="video-grid">
-      <article class="video-card">
-        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/domino.webp" width="1520" height="900">
-          <source src="assets/video/domino.mp4" type="video/mp4">
-        </video>
-        <div class="video-text">
-          <h3>Domino</h3>
-          <p>Arrange blue dominoes so that pushing the green domino topples the purple one, using as few blue dominoes as possible. Poses are noisy, and friction is unknown. At test, the green and purple dominoes stand at right angles, so the cascade has to turn.</p>
-          <p class="learned">The agent fits friction 0.50 to the training cascade, up from the base simulator's 0.10. In its model, two blue dominoes turn the chain through 90&deg; in every rollout before the test chain is built.</p>
-        </div>
+    <figure class="figure">
+      <img src="assets/img/method.webp" width="2200" height="1256" loading="lazy" alt="The learning and planning loop in a Bridge run: the agent experiments, writes a residual program for glue, infers its parameters, and plans with the extended simulator.">
+      <figcaption><strong>Learning and planning during a continual run.</strong> In this Bridge example, the agent learns how glue bonds touching blocks after an unknown cure time. The loop is schematic: steps may repeat or occur in a different order.</figcaption>
+    </figure>
+    <div class="cards three">
+      <article>
+        <h3>Residual world model</h3>
+        <p>The agent writes a program that subclasses the physics engine and adds what it lacks: forces, constraints, and quantities such as water volume, temperature, or a glued joint's cure progress.</p>
       </article>
-      <article class="video-card">
-        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/bridge.webp" width="1520" height="900">
-          <source src="assets/video/bridge.mp4" type="video/mp4">
-        </video>
-        <div class="video-text">
-          <h3>Bridge</h3>
-          <p>Glue blocks into an n-shaped bridge across two marked sites. Poses are noisy, and bonds and cure progress are hidden. The test span has four blocks, one more than in training.</p>
-          <p class="learned">The agent's experiments show how glue bonds. It writes the glue program <a href="#program">shown below</a> and builds the four-block span.</p>
-        </div>
+      <article>
+        <h3>Belief over parameters and state</h3>
+        <p>From noisy observations, the agent infers a belief over the program's parameters and the current state, including the hidden quantities the program tracks.</p>
       </article>
-      <article class="video-card">
-        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/balloons.webp" width="1520" height="900">
-          <source src="assets/video/balloons.mp4" type="video/mp4">
-        </video>
-        <div class="video-text">
-          <h3>Balloons</h3>
-          <p>Release balloons tied to a box so that it settles within a target height band. A freed balloon cannot be clipped back, and one that reaches the red cap over the chute bursts. The test band is the highest, with four balloons on the rack.</p>
-          <p class="learned">The agent's experiments show that lift fades with height.</p>
-        </div>
-      </article>
-      <article class="video-card">
-        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/boil.webp" width="1520" height="900">
-          <source src="assets/video/boil.mp4" type="video/mp4">
-        </video>
-        <div class="video-text">
-          <h3>Boil</h3>
-          <p>Fill jugs with water, boil them without spilling, then turn the burner off. The base simulator neither fills nor heats the jugs. At test, two jugs must boil.</p>
-          <p class="learned">Water from the tap lands in front of the drawn spout, and a jug placed on the puddle fills at a rate the agent measures. The model predicts that overlapping filling and boiling brings both jugs to a boil without a spill, as happens in the test episode.</p>
-        </div>
-      </article>
-      <article class="video-card">
-        <video class="run-video" controls muted playsinline preload="none" poster="assets/video/fan.webp" width="1520" height="900">
-          <source src="assets/video/fan.mp4" type="video/mp4">
-        </video>
-        <div class="video-text">
-          <h3>Fan</h3>
-          <p>Switch fans to bring a ball to rest at a target. The ball's position is noisy, and airflow and drag must be learned. The test target sits at a new position.</p>
-          <p class="learned">A fan burst rolls the ball 0.9&nbsp;m. In the model, the ball stalls on a lip that noisy platform heights created, which the agent removes; its push, brake and blow plan then stops the ball 6&nbsp;mm from the predicted spot in the test episode.</p>
-        </div>
+      <article>
+        <h3>Planning and experiments</h3>
+        <p>The agent simulates candidate plans under draws from this belief and executes the plan most likely to succeed. When an uncertain quantity decides the outcome, it runs an experiment first, and when execution contradicts the model, it revises the program.</p>
       </article>
     </div>
-    <h3 class="subheading">The same runs in the paper</h3>
-    <p class="subtext">The paper's figures show these runs as frames in time order. The purple bar marks where the agent writes its simulator program and infers its parameters; dashed frames show what the agent's world model predicts for a plan.</p>
-    <figure class="figure">
-      <img src="assets/img/runs.webp" width="2200" height="1197" loading="lazy" alt="Frames from recorded runs in Bridge, Balloons and on the real robot, from the first experiments to the solved test task, with dashed frames for model predictions.">
-      <figcaption><strong>Recorded EMPIRIC runs from exploring to solving.</strong> <em>Top:</em> in Bridge, the goal is to glue blocks into a bridge across two supports; the agent's experiments show how glue bonds. <em>Middle:</em> in Balloons, the goal is to release balloons so that the box settles in a target height band; the agent's experiments show that lift fades with height. <em>Bottom:</em> on the real robot, the test goal is to land the green domino in the pink patch; the fan cannot move the green domino, so the agent stands the gray one upwind to knock it in.</figcaption>
-    </figure>
-    <figure class="figure">
-      <img src="assets/img/runs-appendix.webp" width="2200" height="1229" loading="lazy" alt="Frames from recorded runs in Domino, Boil and Fan, from the first experiments to the solved test task, with dashed frames for model predictions.">
-      <figcaption><strong>Recorded EMPIRIC runs in Domino, Boil, and Fan.</strong> In Domino, the agent adds no mechanism and fits only the base simulator's parameters.</figcaption>
-    </figure>
   </div>
 </section>
 
-<section class="section" id="method" aria-labelledby="method-title">
+<section class="section" id="results" aria-labelledby="results-title">
   <div class="section-heading">
-    <h2 id="method-title">How EMPIRIC learns and plans</h2>
+    <h2 id="results-title">Results</h2>
     <div class="lead">
-      <p>A coding agent starts from a base simulator of generic rigid-body physics and extends it with code for novel physical mechanisms. The engine provides reusable knowledge of motion and contact, so learning can focus on the physics it lacks.</p>
+      <p>We compare EMPIRIC with three baselines, an oracle with the ground-truth dynamics, and two ablations, over five seeds in each domain. All agents use Claude Opus 5 and share the same skills, noisy observations, and step budgets. A run succeeds only if every training and test task is solved.</p>
     </div>
   </div>
+  <div class="stats">
+    <div><strong>25 / 25</strong><span>runs solved by EMPIRIC across the five domains</span></div>
+    <div><strong>16 / 25</strong><span>runs solved by the strongest baselines, Direct agent and Standalone sim.</span></div>
+    <div><strong>p &le; 0.002</strong><span>for EMPIRIC against each baseline, by a two-sided Fisher's exact test pooled over domains</span></div>
+  </div>
   <figure class="figure">
-    <img src="assets/img/method.webp" width="2200" height="1256" loading="lazy" alt="The learning and planning loop in a Bridge run: the agent experiments, writes a residual program for glue, infers its parameters, and plans with the extended simulator.">
-    <figcaption><strong>Learning and planning during a continual run.</strong> In this Bridge example, the agent learns how glue bonds touching blocks after an unknown cure time. The loop is schematic: steps may repeat or occur in a different order.</figcaption>
+    <img src="assets/img/results.webp" width="2200" height="792" loading="lazy" alt="Bar charts of the percentage of runs solved per domain and agent, and curves of runs solved against the environment-step budget.">
+    <figcaption><strong>Results with noisy observations across five domains.</strong> <em>Top:</em> percentage of the five runs with every training and test task solved. <em>Bottom:</em> percentage of runs solved within each environment-step budget; each curve steps up at a solved run's total steps and ends at the agent's rate above.</figcaption>
   </figure>
   <div class="cards three">
     <article>
-      <h3>Residual world model</h3>
-      <p>The agent writes a program that subclasses the physics engine and adds what it lacks: forces, constraints, and quantities such as water volume, temperature, or a glued joint's cure progress.</p>
+      <h3>Fewer steps to solve</h3>
+      <p>In every domain, EMPIRIC reaches a 60% solve rate with fewer steps than any baseline that reaches it at all. The comparisons suggest that part of the advantage comes from simulating robot skills together with the underlying physics: baselines often fail when they extrapolate beyond what they observed, such as extending a straight cascade to a turning one.</p>
     </article>
     <article>
-      <h3>Belief over parameters and state</h3>
-      <p>From noisy observations, the agent infers a belief over the program's parameters and the current state, including the hidden quantities the program tracks.</p>
+      <h3>Matches oracle success</h3>
+      <p>EMPIRIC matches Oracle dynamics at 25/25 runs. It uses 12&ndash;18% more steps than Oracle in Domino, Bridge, and Balloons, 74% more in Boil, and 8% fewer in Fan: correct dynamics alone do not guarantee efficiency, because Oracle must still estimate the state from noisy observations.</p>
     </article>
     <article>
-      <h3>Planning and experiments</h3>
-      <p>The agent simulates candidate plans under draws from this belief and executes the plan most likely to succeed. When an uncertain quantity decides the outcome, it runs an experiment first, and when execution contradicts the model, it revises the program.</p>
+      <h3>Uncertainty for irreversible actions</h3>
+      <p>Without harness fitting, 20/25 runs succeed, and without explicit uncertainty, 21/25. In Balloons, where releases cannot be undone, EMPIRIC solves 5/5 runs, against 2/5 and 3/5 for the two ablations.</p>
     </article>
   </div>
+</section>
+
+<section class="band" id="robot" aria-labelledby="robot-title">
+  <div class="section">
+    <div class="section-heading">
+      <h2 id="robot-title">On a real robot</h2>
+      <div class="lead">
+        <p>In a physical Fan&ndash;Domino task, the robot knows neither the fan's wind nor the masses of its two dominoes. The training goal is to land the lighter domino flat in a target patch with one gust. At test, the patch moves farther downwind, and the robot must reach it with the heavier domino.</p>
+        <p>From two gusts, EMPIRIC learns a wind force that decays after the fan stops and infers both masses. Its model predicts that no placement of the green domino alone reaches the new patch, so the agent stands the gray domino upwind, where its fall knocks the green one in. The predicted slide of 10.1&nbsp;&plusmn;&nbsp;2.3&nbsp;cm matches the measured 9.9&nbsp;cm.</p>
+      </div>
+    </div>
+    <figure class="tab-player" id="robot-player">
+      <div class="tab-player-top">
+        <div class="player-tabs" role="group" aria-label="Part of the run">
+          <button type="button" aria-pressed="true" data-video="assets/video/robot-experiment-1.mp4" data-poster="assets/video/robot-experiment-1.webp" data-caption="The robot stands the green block 0.25&nbsp;m downwind of the fan, where its model&rsquo;s predictions disagree most, and presses the fan button. The gust leaves the green block standing.">Experiment 1</button>
+          <button type="button" aria-pressed="false" data-video="assets/video/robot-experiment-2.mp4" data-poster="assets/video/robot-experiment-2.webp" data-caption="The robot moves the green block out of the wind, stands the gray block where the green one stood, and presses the button. The gray block slides 12.1&nbsp;cm and lands flat in the patch, so it is the lighter one.">Experiment 2</button>
+          <button type="button" aria-pressed="false" data-video="assets/video/robot-test.mp4" data-poster="assets/video/robot-test.webp" data-caption="With the patch moved to 0.51&nbsp;m, the robot stands the green block at 0.375&nbsp;m and the gray block 17.5&nbsp;cm upwind of it. One gust knocks the gray block into the green one, which slides 9.9&nbsp;cm, against a predicted 10.1&nbsp;&plusmn;&nbsp;2.3&nbsp;cm, and lands flat in the patch.">Test</button>
+        </div>
+        <div class="player-speed" role="group" aria-label="Playback speed">
+          <button type="button" aria-pressed="false" data-rate="1">1&times;</button>
+          <button type="button" aria-pressed="true" data-rate="2">2&times;</button>
+          <button type="button" aria-pressed="false" data-rate="4">4&times;</button>
+        </div>
+      </div>
+      <video controls muted playsinline preload="none" src="assets/video/robot-experiment-1.mp4" poster="assets/video/robot-experiment-1.webp" width="1920" height="540" aria-labelledby="robot-label"></video>
+      <figcaption id="robot-label"><span class="player-name">Experiment 1</span>: <span class="player-caption">The robot stands the green block 0.25&nbsp;m downwind of the fan, where its model&rsquo;s predictions disagree most, and presses the fan button. The gust leaves the green block standing.</span></figcaption>
+    </figure>
+    <details class="more">
+      <summary>Show photos from the run (12)</summary>
+      <div class="strip">
+        <h3>Experiments</h3>
+        <p>The green block before and after a gust, then the gray block before and after. The green block stays upright; the gray block falls into the target.</p>
+        <div class="frames">
+          <img src="assets/img/robot/01_green_probe_before.webp" width="959" height="562" loading="lazy" alt="The green block stands downwind of the fan before the first gust.">
+          <img src="assets/img/robot/02_green_probe_held_upright.webp" width="959" height="562" loading="lazy" alt="The green block still stands upright after the gust.">
+          <img src="assets/img/robot/03_gray_probe_before.webp" width="959" height="562" loading="lazy" alt="The gray block stands downwind of the fan before the second gust.">
+          <img src="assets/img/robot/05_gray_probe_held_flat.webp" width="959" height="562" loading="lazy" alt="The gray block lies flat in the target after the gust.">
+        </div>
+      </div>
+      <div class="strip">
+        <h3>Test setup</h3>
+        <p>The relocated target, the green block placed first, the gray block placed upwind of it, and the robot pressing the fan button.</p>
+        <div class="frames">
+          <img src="assets/img/robot/06_target_relocated.webp" width="959" height="562" loading="lazy" alt="The pink target patch, moved farther from the fan.">
+          <img src="assets/img/robot/07_green_placed_first.webp" width="959" height="562" loading="lazy" alt="The robot has placed the green block.">
+          <img src="assets/img/robot/08_gray_placed_second.webp" width="959" height="562" loading="lazy" alt="The robot has placed the gray block upwind of the green one.">
+          <img src="assets/img/robot/09_test_button_press.webp" width="959" height="562" loading="lazy" alt="The robot presses the fan button.">
+        </div>
+      </div>
+      <div class="strip">
+        <h3>Cascade</h3>
+        <p>The gray block topples toward the green block and reaches it, the green block falls, and it comes to rest flat in the relocated target.</p>
+        <div class="frames">
+          <img src="assets/img/robot/10_gray_toppling_toward_green.webp" width="959" height="562" loading="lazy" alt="The gray block topples toward the green block.">
+          <img src="assets/img/robot/11_gray_reaches_green.webp" width="959" height="562" loading="lazy" alt="The gray block reaches the green block.">
+          <img src="assets/img/robot/12_green_toppling.webp" width="959" height="562" loading="lazy" alt="The green block topples.">
+          <img src="assets/img/robot/13_green_in_new_target.webp" width="959" height="562" loading="lazy" alt="The green block rests flat in the relocated target.">
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section class="section" id="videos" aria-labelledby="videos-title">
+  <div class="section-heading">
+    <h2 id="videos-title">Recorded runs</h2>
+    <div class="lead">
+      <p>The paper's figures show one recorded run per domain as frames in time order, from the first experiments to the solved test task. The purple bar marks where the agent writes its simulator program and infers its parameters; dashed frames show what its model predicts for a plan.</p>
+      <p>The full recordings below show every step of the same runs: the training tasks, where the agent experiments, then the test task, with the goal, the skill the agent runs and the reason it gave beside the scene.</p>
+    </div>
+  </div>
+  <figure class="figure">
+    <img src="assets/img/runs.webp" width="2200" height="1197" loading="lazy" alt="Frames from recorded runs in Bridge, Balloons and on the real robot, from the first experiments to the solved test task, with dashed frames for model predictions.">
+    <figcaption><strong>Recorded EMPIRIC runs from exploring to solving.</strong> <em>Top:</em> in Bridge, the goal is to glue blocks into a bridge across two supports; the agent's experiments show how glue bonds. <em>Middle:</em> in Balloons, the goal is to release balloons so that the box settles in a target height band; the agent's experiments show that lift fades with height. <em>Bottom:</em> on the real robot, the test goal is to land the green domino in the pink patch; the fan cannot move the green domino, so the agent stands the gray one upwind to knock it in.</figcaption>
+  </figure>
+  <figure class="figure">
+    <img src="assets/img/runs-appendix.webp" width="2200" height="1229" loading="lazy" alt="Frames from recorded runs in Domino, Boil and Fan, from the first experiments to the solved test task, with dashed frames for model predictions.">
+    <figcaption><strong>Recorded EMPIRIC runs in Domino, Boil, and Fan.</strong> In Domino, the agent adds no mechanism and fits only the base simulator's parameters.</figcaption>
+  </figure>
+  <h3 class="subheading">Full recordings</h3>
+  <figure class="tab-player" id="runs-player">
+    <div class="tab-player-top">
+      <div class="player-tabs" role="group" aria-label="Domain">
+        <button type="button" aria-pressed="true" data-video="assets/video/domino.mp4" data-poster="assets/video/domino.webp" data-caption="Arrange blue dominoes so that pushing the green domino topples the purple one, using as few blue dominoes as possible. Poses are noisy, and friction is unknown. At test, the green and purple dominoes stand at right angles, so the cascade has to turn." data-learned="The agent fits friction 0.50 to the training cascade, up from the base simulator's 0.10. In its model, two blue dominoes turn the chain through 90&deg; in every rollout before the test chain is built.">Domino</button>
+        <button type="button" aria-pressed="false" data-video="assets/video/bridge.mp4" data-poster="assets/video/bridge.webp" data-caption="Glue blocks into an n-shaped bridge across two marked sites. Poses are noisy, and bonds and cure progress are hidden. The test span has four blocks, one more than in training." data-learned="The agent's experiments show how glue bonds. It writes the glue program shown further down and builds the four-block span.">Bridge</button>
+        <button type="button" aria-pressed="false" data-video="assets/video/balloons.mp4" data-poster="assets/video/balloons.webp" data-caption="Release balloons tied to a box so that it settles within a target height band. A freed balloon cannot be clipped back, and one that reaches the red cap over the chute bursts. The test band is the highest, with four balloons on the rack." data-learned="The agent's experiments show that lift fades with height.">Balloons</button>
+        <button type="button" aria-pressed="false" data-video="assets/video/boil.mp4" data-poster="assets/video/boil.webp" data-caption="Fill jugs with water, boil them without spilling, then turn the burner off. The base simulator neither fills nor heats the jugs. At test, two jugs must boil." data-learned="Water from the tap lands in front of the drawn spout, and a jug placed on the puddle fills at a rate the agent measures. The model predicts that overlapping filling and boiling brings both jugs to a boil without a spill, as happens in the test episode.">Boil</button>
+        <button type="button" aria-pressed="false" data-video="assets/video/fan.mp4" data-poster="assets/video/fan.webp" data-caption="Switch fans to bring a ball to rest at a target. The ball's position is noisy, and airflow and drag must be learned. The test target sits at a new position." data-learned="A fan burst rolls the ball 0.9&nbsp;m. In the model, the ball stalls on a lip that noisy platform heights created, which the agent removes; its push, brake and blow plan then stops the ball 6&nbsp;mm from the predicted spot in the test episode.">Fan</button>
+      </div>
+      <div class="player-speed" role="group" aria-label="Playback speed">
+        <button type="button" aria-pressed="false" data-rate="1">1&times;</button>
+        <button type="button" aria-pressed="true" data-rate="2">2&times;</button>
+        <button type="button" aria-pressed="false" data-rate="4">4&times;</button>
+        <button type="button" aria-pressed="false" data-rate="8">8&times;</button>
+      </div>
+    </div>
+    <video controls muted playsinline preload="none" src="assets/video/domino.mp4" poster="assets/video/domino.webp" width="1520" height="900" aria-labelledby="runs-label"></video>
+    <figcaption id="runs-label"><span class="player-name">Domino</span>: <span class="player-caption">Arrange blue dominoes so that pushing the green domino topples the purple one, using as few blue dominoes as possible. Poses are noisy, and friction is unknown. At test, the green and purple dominoes stand at right angles, so the cascade has to turn.</span> <span class="player-learned">The agent fits friction 0.50 to the training cascade, up from the base simulator's 0.10. In its model, two blue dominoes turn the chain through 90&deg; in every rollout before the test chain is built.</span></figcaption>
+  </figure>
 </section>
 
 <section class="band" id="program" aria-labelledby="program-title">
@@ -251,7 +302,7 @@
     <div class="section-heading">
       <h2 id="program-title">A program the agent wrote</h2>
       <div class="lead">
-        <p>In the Bridge run above, the agent wrote this glue model after a few probes. Its docstring records what the probes showed, its parameters are fitted to the recorded block poses, and its cure step turns two glued, touching end faces into a rigid weld in the engine.</p>
+        <p>In the Bridge run above, the agent wrote this glue model after a few probes. Its docstring records what the probes showed, its parameters come from the glue readings it recorded, and its cure step turns two glued, touching end faces into a rigid weld in the engine.</p>
       </div>
     </div>
     <div class="code-card">
@@ -636,96 +687,6 @@
 <span class="ln">290</span><span class="n">RESIDUAL_FEATURES</span> <span class="o">=</span> <span class="n">BridgeGlueWeld</span><span class="o">.</span><span class="n">RESIDUAL_FEATURES</span><!-- /code:full --></code></pre>
       </div>
     </details>
-  </div>
-</section>
-
-<section class="section" id="results" aria-labelledby="results-title">
-  <div class="section-heading">
-    <h2 id="results-title">Results</h2>
-    <div class="lead">
-      <p>We compare EMPIRIC with three baselines, an oracle with the ground-truth dynamics, and two ablations, over five seeds in each domain. All agents use Claude Opus 5 and share the same skills, noisy observations, and step budgets. A run succeeds only if every training and test task is solved.</p>
-    </div>
-  </div>
-  <div class="stats">
-    <div><strong>25 / 25</strong><span>runs solved by EMPIRIC across the five domains</span></div>
-    <div><strong>16 / 25</strong><span>runs solved by the strongest baselines, Direct agent and Standalone sim.</span></div>
-    <div><strong>p &le; 0.002</strong><span>for EMPIRIC against each baseline, by a two-sided Fisher's exact test pooled over domains</span></div>
-  </div>
-  <figure class="figure">
-    <img src="assets/img/results.webp" width="2200" height="792" loading="lazy" alt="Bar charts of the percentage of runs solved per domain and agent, and curves of runs solved against the environment-step budget.">
-    <figcaption><strong>Results with noisy observations across five domains.</strong> <em>Top:</em> percentage of the five runs with every training and test task solved. <em>Bottom:</em> percentage of runs solved within each environment-step budget; each curve steps up at a solved run's total steps and ends at the agent's rate above.</figcaption>
-  </figure>
-  <div class="cards three">
-    <article>
-      <h3>Fewer steps to solve</h3>
-      <p>In every domain, EMPIRIC reaches a 60% solve rate with fewer steps than any baseline that reaches it at all. The comparisons suggest that part of the advantage comes from simulating robot skills together with the underlying physics: baselines often fail when they extrapolate beyond what they observed, such as extending a straight cascade to a turning one.</p>
-    </article>
-    <article>
-      <h3>Matches oracle success</h3>
-      <p>EMPIRIC matches Oracle dynamics at 25/25 runs. It uses 12&ndash;18% more steps than Oracle in Domino, Bridge, and Balloons, 74% more in Boil, and 8% fewer in Fan: correct dynamics alone do not guarantee efficiency, because Oracle must still estimate the state from noisy observations.</p>
-    </article>
-    <article>
-      <h3>Uncertainty for irreversible actions</h3>
-      <p>Without harness fitting, 20/25 runs succeed, and without explicit uncertainty, 21/25. In Balloons, where releases cannot be undone, EMPIRIC solves 5/5 runs, against 2/5 and 3/5 for the two ablations.</p>
-    </article>
-  </div>
-</section>
-
-<section class="band" id="robot" aria-labelledby="robot-title">
-  <div class="section">
-    <div class="section-heading">
-      <h2 id="robot-title">On a real robot</h2>
-      <div class="lead">
-        <p>In a physical Fan&ndash;Domino task, the robot knows neither the fan's wind nor the masses of its two dominoes. The training goal is to land the lighter domino flat in a target patch with one gust. At test, the patch moves farther downwind, and the robot must reach it with the heavier domino.</p>
-        <p>From two gusts, EMPIRIC learns a wind force that decays after the fan stops and infers both masses. Its model predicts that no placement of the green domino alone reaches the new patch, so the agent stands the gray domino upwind, where its fall knocks the green one in. The predicted slide of 10.1&nbsp;&plusmn;&nbsp;2.3&nbsp;cm matches the measured 9.9&nbsp;cm.</p>
-      </div>
-    </div>
-    <figure class="robot-player" id="robot-player">
-      <div class="robot-player-top">
-        <div class="player-tabs" role="group" aria-label="Part of the run">
-          <button type="button" aria-pressed="true" data-video="assets/video/robot-experiment-1.mp4" data-poster="assets/video/robot-experiment-1.webp" data-caption="The robot stands the green block 0.25&nbsp;m downwind of the fan, where its model&rsquo;s predictions disagree most, and presses the fan button. The gust leaves the green block standing.">Experiment 1</button>
-          <button type="button" aria-pressed="false" data-video="assets/video/robot-experiment-2.mp4" data-poster="assets/video/robot-experiment-2.webp" data-caption="The robot moves the green block out of the wind, stands the gray block where the green one stood, and presses the button. The gray block slides 12.1&nbsp;cm and lands flat in the patch, so it is the lighter one.">Experiment 2</button>
-          <button type="button" aria-pressed="false" data-video="assets/video/robot-test.mp4" data-poster="assets/video/robot-test.webp" data-caption="With the patch moved to 0.51&nbsp;m, the robot stands the green block at 0.375&nbsp;m and the gray block 17.5&nbsp;cm upwind of it. One gust knocks the gray block into the green one, which slides 9.9&nbsp;cm, against a predicted 10.1&nbsp;&plusmn;&nbsp;2.3&nbsp;cm, and lands flat in the patch.">Test</button>
-        </div>
-        <div class="player-speed" role="group" aria-label="Playback speed">
-          <button type="button" aria-pressed="false" data-rate="1">1&times;</button>
-          <button type="button" aria-pressed="true" data-rate="2">2&times;</button>
-          <button type="button" aria-pressed="false" data-rate="4">4&times;</button>
-        </div>
-      </div>
-      <video controls muted playsinline preload="none" src="assets/video/robot-experiment-1.mp4" poster="assets/video/robot-experiment-1.webp" width="1920" height="540" aria-labelledby="robot-label"></video>
-      <figcaption id="robot-label"><span class="player-name">Experiment 1</span>: <span class="player-caption">The robot stands the green block 0.25&nbsp;m downwind of the fan, where its model&rsquo;s predictions disagree most, and presses the fan button. The gust leaves the green block standing.</span></figcaption>
-    </figure>
-    <div class="strip">
-      <h3>Experiments</h3>
-      <p>The green block before and after a gust, then the gray block before and after. The green block stays upright; the gray block falls into the target.</p>
-      <div class="frames">
-        <img src="assets/img/robot/01_green_probe_before.webp" width="959" height="562" loading="lazy" alt="The green block stands downwind of the fan before the first gust.">
-        <img src="assets/img/robot/02_green_probe_held_upright.webp" width="959" height="562" loading="lazy" alt="The green block still stands upright after the gust.">
-        <img src="assets/img/robot/03_gray_probe_before.webp" width="959" height="562" loading="lazy" alt="The gray block stands downwind of the fan before the second gust.">
-        <img src="assets/img/robot/05_gray_probe_held_flat.webp" width="959" height="562" loading="lazy" alt="The gray block lies flat in the target after the gust.">
-      </div>
-    </div>
-    <div class="strip">
-      <h3>Test setup</h3>
-      <p>The relocated target, the green block placed first, the gray block placed upwind of it, and the robot pressing the fan button.</p>
-      <div class="frames">
-        <img src="assets/img/robot/06_target_relocated.webp" width="959" height="562" loading="lazy" alt="The pink target patch, moved farther from the fan.">
-        <img src="assets/img/robot/07_green_placed_first.webp" width="959" height="562" loading="lazy" alt="The robot has placed the green block.">
-        <img src="assets/img/robot/08_gray_placed_second.webp" width="959" height="562" loading="lazy" alt="The robot has placed the gray block upwind of the green one.">
-        <img src="assets/img/robot/09_test_button_press.webp" width="959" height="562" loading="lazy" alt="The robot presses the fan button.">
-      </div>
-    </div>
-    <div class="strip">
-      <h3>Cascade</h3>
-      <p>The gray block topples toward the green block and reaches it, the green block falls, and it comes to rest flat in the relocated target.</p>
-      <div class="frames">
-        <img src="assets/img/robot/10_gray_toppling_toward_green.webp" width="959" height="562" loading="lazy" alt="The gray block topples toward the green block.">
-        <img src="assets/img/robot/11_gray_reaches_green.webp" width="959" height="562" loading="lazy" alt="The gray block reaches the green block.">
-        <img src="assets/img/robot/12_green_toppling.webp" width="959" height="562" loading="lazy" alt="The green block topples.">
-        <img src="assets/img/robot/13_green_in_new_target.webp" width="959" height="562" loading="lazy" alt="The green block rests flat in the relocated target.">
-      </div>
-    </div>
   </div>
 </section>
 
