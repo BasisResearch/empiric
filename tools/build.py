@@ -14,6 +14,9 @@ Sources:
 - The real-robot Fan-Domino run (exp_20260922_134142) from the robot's
   logs (--real-robot): casc_explore.mp4 holds its two experiments and
   casc_test.mp4 its test, both cameras side by side.
+- The hero player's story videos (--stories): each run from its
+  experiments, through the program the agent writes and its plan in its
+  own model, to the solved test, composed from the same Cycles renders.
 
 Outputs go under assets/. The code listings are written into index.html
 between the <!-- code:NAME --> and <!-- /code:NAME --> markers, so the
@@ -55,6 +58,9 @@ RUNS = {
 # <domain>/<domain>.mp4 here. The harness's own run.mp4 uses PyBullet's
 # renderer, and Balloons and Fan have moved to new layouts since.
 CYCLES = Path("/orcd/home/002/ycliang/predicators/logs/paper_run_videos_cycles")
+# The story videos, one per domain: make_story.py in ~/claude_sbatch/story
+# writes <domain>.mp4 (1080x1080, 20 fps, captions burned in).
+STORIES = Path("/home/ycliang/claude_sbatch/story/out")
 # Each recording is 1520x900: the 900x900 scene, then the harness panel.
 SCENE_CROP = "crop=900:900:0:0"
 END_TRIM = 0.3  # the last frames repeat the final state
@@ -235,6 +241,24 @@ def build_videos(ff, logs, cycles, out):
               f"of {total} ({(total - first) / 20:.1f} s)")
 
 
+def build_stories(ff, stories, out):
+    """Copy each domain's story video for streaming, with its title card as
+    the poster."""
+    out.mkdir(parents=True, exist_ok=True)
+    for name in [*RUNS, "robot"]:
+        src = stories / f"{name}.mp4"
+        clip = out / f"story-{name}.mp4"
+        run([ff, "-v", "error", "-y", "-i", str(src), "-c", "copy", "-an",
+             "-movflags", "+faststart", str(clip)])
+        run([ff, "-v", "error", "-y", "-ss", "1", "-i", str(clip),
+             "-frames:v", "1", str(out / f"story-{name}.png")])
+        poster = Image.open(out / f"story-{name}.png").convert("RGB")
+        poster.save(out / f"story-{name}.webp", quality=82, method=6)
+        (out / f"story-{name}.png").unlink()
+        print(f"story {name}: {duration(ff, clip):.1f} s, "
+              f"{clip.stat().st_size / 1e6:.1f} MB")
+
+
 def build_robot_videos(ff, real_robot, out):
     """Cut the real-robot run into its experiments and test, with posters,
     and the test's square clip for the hero player."""
@@ -306,9 +330,10 @@ def main():
     parser.add_argument("--logs", type=Path, default=LOGS)
     parser.add_argument("--cycles", type=Path, default=CYCLES)
     parser.add_argument("--real-robot", type=Path, default=REAL_ROBOT)
+    parser.add_argument("--stories", type=Path, default=STORIES)
     parser.add_argument("--ffmpeg")
     parser.add_argument("--only", choices=["figures", "robot", "videos",
-                                           "robot-videos", "code"])
+                                           "stories", "robot-videos", "code"])
     args = parser.parse_args()
     steps = {
         "figures": lambda: build_figures(args.paper, SITE / "assets" / "img"),
@@ -316,6 +341,9 @@ def main():
         "videos": lambda: build_videos(ffmpeg_path(args.ffmpeg), args.logs,
                                        args.cycles,
                                        SITE / "assets" / "video"),
+        "stories": lambda: build_stories(ffmpeg_path(args.ffmpeg),
+                                         args.stories,
+                                         SITE / "assets" / "video"),
         "robot-videos": lambda: build_robot_videos(
             ffmpeg_path(args.ffmpeg), args.real_robot,
             SITE / "assets" / "video"),

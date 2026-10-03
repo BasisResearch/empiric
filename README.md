@@ -19,12 +19,14 @@ python3 tools/build.py
 The script reads the paper repository's figures and robot photos, and one recorded EMPIRIC run per domain from the agent logs (the runs behind the paper's trajectory figures).
 Each run video is rendered with Blender Cycles from the run's recorded states, with the materials, lighting and cameras of the paper figures and the harness panel beside the scene.
 Predicators' `scripts/paper_figures/export_run_video_scenes.py`, `render_cycles_frames.py` and `compose_cycles_video.py` write them to `logs/paper_run_videos_cycles/<domain>/<domain>.mp4`; `docs/RENDERING.md` there has the commands.
-The build writes the figure images, the run videos with their posters, the test-task clips the hero player shows, and the Bridge program.
+The build writes the figure images, the run videos with their posters, the test-task clips, and the Bridge program.
 Each test-task clip is the scene of its run's last level, found from the level banners in the harness panel and checked against the run's `scorecard.json`.
+The hero player shows one story video per domain and one for the real robot: the run's experiments, the program the agent writes and the parameters it infers, its plan rehearsed in its own model, and the solved test beside the prediction.
+`make_story.py` in `~/claude_sbatch/story` composes them from the same Cycles renders, with the agent's imagined rollouts rendered the same way, and the `stories` step copies them here with their posters.
 The real-robot clips come from the Fan-Domino run's two-camera videos in predicators' `logs/real_robot/fan_domino_drive`: `casc_explore.mp4` is cut into its two experiments, and `casc_test.mp4` is the test.
-The hero player's Real robot tab shows the same test from the side camera, cropped square (`ROBOT_HERO_CROP`).
+The square side-camera clip of the test (`ROBOT_HERO_CROP`) is what the hero player showed before the story videos.
 It also rewrites the two code listings in `index.html` between their `<!-- code:... -->` markers; the rest of the page is untouched.
-Pass `--only figures|robot|videos|robot-videos|code` to rebuild one part, and `--paper`, `--logs`, `--cycles`, `--real-robot` or `--ffmpeg` to change where it looks.
+Pass `--only figures|robot|videos|stories|robot-videos|code` to rebuild one part, and `--paper`, `--logs`, `--cycles`, `--stories`, `--real-robot` or `--ffmpeg` to change where it looks.
 Without a system ffmpeg, it uses the one bundled with the `imageio-ffmpeg` Python package.
 
 ## Paper

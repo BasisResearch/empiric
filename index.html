@@ -84,14 +84,14 @@
       </div>
       <figure class="hero-media player" id="hero-player">
         <div class="player-tabs" role="group" aria-label="Domain">
-          <button type="button" aria-pressed="true" data-rate="1" data-video="assets/video/test-domino.mp4" data-poster="assets/video/test-domino.webp" data-caption="the green and purple dominoes stand at right angles, so the cascade has to turn.">Domino</button>
-          <button type="button" aria-pressed="false" data-rate="1" data-video="assets/video/test-bridge.mp4" data-poster="assets/video/test-bridge.webp" data-caption="the span has four blocks, one more than in training.">Bridge</button>
-          <button type="button" aria-pressed="false" data-rate="1" data-video="assets/video/test-balloons.mp4" data-poster="assets/video/test-balloons.webp" data-caption="the target band is the highest, with four balloons on the rack.">Balloons</button>
-          <button type="button" aria-pressed="false" data-rate="1" data-video="assets/video/test-boil.mp4" data-poster="assets/video/test-boil.webp" data-caption="two jugs must boil.">Boil</button>
-          <button type="button" aria-pressed="false" data-rate="2" data-video="assets/video/test-fan.mp4" data-poster="assets/video/test-fan.webp" data-caption="the target sits at a new position.">Fan</button>
-          <button type="button" aria-pressed="false" data-rate="4" data-video="assets/video/test-robot.mp4" data-poster="assets/video/test-robot.webp" data-caption="the patch moves farther downwind, and the robot must reach it with the heavier domino.">Real robot</button>
+          <button type="button" aria-pressed="true" data-rate="1" data-video="assets/video/story-domino.mp4" data-poster="assets/video/story-domino.webp" data-caption="the agent fits the contact constants to a training cascade, finds in its model that a struck domino falls along the blow, and turns the test chain through 90&deg;.">Domino</button>
+          <button type="button" aria-pressed="false" data-rate="1" data-video="assets/video/story-bridge.mp4" data-poster="assets/video/story-bridge.webp" data-caption="its probes show how glue bonds; it writes glue into its simulator, rehearses the gluing in its model, and builds a span one block longer than in training.">Bridge</button>
+          <button type="button" aria-pressed="false" data-rate="1" data-video="assets/video/story-balloons.mp4" data-poster="assets/video/story-balloons.webp" data-caption="one probe bursts a balloon at the ceiling and another shows lift fading with height; it writes lift into its simulator and settles the box in the highest band.">Balloons</button>
+          <button type="button" aria-pressed="false" data-rate="1" data-video="assets/video/story-boil.mp4" data-poster="assets/video/story-boil.webp" data-caption="water lands in front of the spout, so it fills the jug on the puddle; it writes filling and heating into its simulator and boils two jugs at test.">Boil</button>
+          <button type="button" aria-pressed="false" data-rate="1" data-video="assets/video/story-fan.mp4" data-poster="assets/video/story-fan.webp" data-caption="replaying a fan burst in its model, it finds a lip the real ramp lacks, fixes its program, and stops the ball 6&nbsp;mm from the predicted spot.">Fan</button>
+          <button type="button" aria-pressed="false" data-rate="1" data-video="assets/video/story-robot.mp4" data-poster="assets/video/story-robot.webp" data-caption="two gusts show which domino is heavier; its model predicts that the gray one, stood upwind, knocks green 10.1&nbsp;&plusmn;&nbsp;2.3&nbsp;cm into the patch, and it slides 9.9&nbsp;cm.">Real robot</button>
         </div>
-        <video muted playsinline preload="auto" src="assets/video/test-domino.mp4" poster="assets/video/test-domino.webp" width="900" height="900" aria-labelledby="hero-label"></video>
+        <video muted playsinline preload="auto" src="assets/video/story-domino.mp4" poster="assets/video/story-domino.webp" width="1080" height="1080" aria-labelledby="hero-label"></video>
         <div class="player-bar">
           <input class="player-seek" type="range" min="0" max="1" step="any" value="0" aria-label="Position in the video">
           <div class="player-buttons">
@@ -113,7 +113,7 @@
             </div>
           </div>
         </div>
-        <figcaption id="hero-label"><span class="player-name">Domino</span> test task: <span class="player-caption">the green and purple dominoes stand at right angles, so the cascade has to turn.</span></figcaption>
+        <figcaption id="hero-label"><span class="player-name">Domino</span>: <span class="player-caption">the agent fits the contact constants to a training cascade, finds in its model that a struck domino falls along the blow, and turns the test chain through 90&deg;.</span></figcaption>
       </figure>
     </div>
   </div>
