@@ -70,12 +70,13 @@ function setUpPlayer(player, { autoplay, loop }) {
     video.poster = tab.dataset.poster;
     video.src = tab.dataset.video;
     if (tab.dataset.rate) setRate(Number(tab.dataset.rate));
-    name.textContent = tab.textContent;
+    // A tab may show its caption beside its name; the name alone labels it.
+    const label = (tab.querySelector(".tab-name") || tab).textContent.trim();
+    name.textContent = label;
     caption.textContent = tab.dataset.caption;
     if (learned) learned.textContent = tab.dataset.learned || "";
     if (download) {
       // The download link follows the clip on screen.
-      const label = tab.textContent.trim();
       download.href = tab.dataset.video;
       download.download = `empiric-${label.toLowerCase().replace(/\s+/g, "-")}.mp4`;
       download.setAttribute("aria-label", `Download the ${label} video`);

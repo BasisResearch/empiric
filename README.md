@@ -23,8 +23,9 @@ The build writes the figure images, the run videos with their posters, the story
 The hero player shows one story video per domain and one for the real robot: the run's experiments, the program the agent writes and the parameters it infers, its plan rehearsed in its own model, and the solved test beside the prediction.
 `make_story.py` in `~/claude_sbatch/story` composes them from the same Cycles renders, with the agent's imagined rollouts rendered the same way, and the `stories` step copies them here with their posters.
 The real-robot clips come from the Fan-Domino run's two-camera videos in predicators' `logs/real_robot/fan_domino_drive`: `casc_explore.mp4` is cut into its two experiments, and `casc_test.mp4` is the test.
-It also rewrites the two code listings in `index.html` between their `<!-- code:... -->` markers; the rest of the page is untouched.
-Pass `--only figures|robot|videos|stories|robot-videos|code` to rebuild one part, and `--paper`, `--logs`, `--cycles`, `--stories`, `--real-robot` or `--ffmpeg` to change where it looks.
+It also rewrites the two code listings in `index.html` between their `<!-- code:... -->` markers, and stamps the stylesheet and script links with their content hashes so browsers fetch new versions; the rest of the page is untouched.
+After editing `site.css` or `site.js` by hand, run `python3 tools/build.py --only stamp`.
+Pass `--only figures|robot|videos|stories|robot-videos|code|stamp` to rebuild one part, and `--paper`, `--logs`, `--cycles`, `--stories`, `--real-robot` or `--ffmpeg` to change where it looks.
 Without a system ffmpeg, it uses the one bundled with the `imageio-ffmpeg` Python package.
 
 ## Paper

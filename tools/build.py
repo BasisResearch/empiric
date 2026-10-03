@@ -21,6 +21,7 @@ between the <!-- code:NAME --> and <!-- /code:NAME --> markers, so the
 rest of index.html stays hand-edited.
 """
 import argparse
+import hashlib
 import os
 import re
 import shutil
@@ -242,6 +243,21 @@ def build_code(logs, index):
     print(f"code: {len(lines)} lines")
 
 
+def stamp_assets(index):
+    """Point index.html at site.css and site.js by content hash, so a new
+    page never pairs with a stylesheet or script that a browser cached
+    from an earlier version (GitHub Pages lets them be cached for ten
+    minutes)."""
+    text = index.read_text()
+    for rel in ("assets/css/site.css", "assets/js/site.js"):
+        digest = hashlib.sha256((SITE / rel).read_bytes()).hexdigest()[:10]
+        text, count = re.subn(rf'"{re.escape(rel)}(\?v=[0-9a-f]+)?"',
+                              f'"{rel}?v={digest}"', text)
+        assert count == 1, rel
+        print(f"stamp: {rel}?v={digest}")
+    index.write_text(text)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--paper", type=Path, default=PAPER)
@@ -251,7 +267,8 @@ def main():
     parser.add_argument("--stories", type=Path, default=STORIES)
     parser.add_argument("--ffmpeg")
     parser.add_argument("--only", choices=["figures", "robot", "videos",
-                                           "stories", "robot-videos", "code"])
+                                           "stories", "robot-videos", "code",
+                                           "stamp"])
     args = parser.parse_args()
     steps = {
         "figures": lambda: build_figures(args.paper, SITE / "assets" / "img"),
@@ -265,6 +282,8 @@ def main():
             ffmpeg_path(args.ffmpeg), args.real_robot,
             SITE / "assets" / "video"),
         "code": lambda: build_code(args.logs, SITE / "index.html"),
+        # Last, after anything that changes the page.
+        "stamp": lambda: stamp_assets(SITE / "index.html"),
     }
     for name, step in steps.items():
         if args.only in (None, name):
