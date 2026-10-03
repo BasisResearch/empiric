@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="assets/css/site.css?v=f22a6352ea">
+<link rel="stylesheet" href="assets/css/site.css?v=3c8afcb610">
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -35,6 +35,7 @@
   <div class="nav-links">
     <a class="nav-button" href="https://arxiv.org/abs/2609.35047">arXiv</a>
     <a class="nav-button" href="https://github.com/BasisResearch/predicators">Code</a>
+    <a class="nav-button" href="https://x.com/yichao_liang/status/2106046466313838843">Thread</a>
   </div>
 </header>
 
@@ -74,12 +75,6 @@
       </ul>
       <p class="equal"><sup>*,&dagger;</sup>Equal contribution</p>
       <p class="hero-summary">EMPIRIC extends a physics engine with code for the physics it is missing, infers that code's parameters from a few noisy experiments, and plans with the result.</p>
-      <div class="hero-actions">
-        <a class="button" href="https://arxiv.org/abs/2609.35047">Paper <span class="button-note">arXiv</span></a>
-        <a class="button" href="https://github.com/BasisResearch/predicators">Code <span class="button-note">GitHub</span></a>
-        <a class="button" href="https://x.com/yichao_liang/status/2106046466313838843">Thread <span class="button-note">X</span></a>
-        <a class="button ghost" href="#videos">Videos <span aria-hidden="true">&darr;</span></a>
-      </div>
     </div>
     <figure class="hero-media player hero-theater" id="hero-player">
       <div class="player-tabs" role="group" aria-label="Domain">
@@ -212,12 +207,7 @@
       <h2 id="robot-title">On a real robot</h2>
       <p class="deck">In a physical Fan&ndash;Domino task, the robot knows neither the fan's wind nor the masses of its two dominoes. The training goal is to land the lighter domino flat in a target patch with one gust. At test, the patch moves farther downwind, and the robot must reach it with the heavier domino.</p>
     </header>
-    <div class="stats">
-      <div><strong>2 gusts</strong><span>to learn a wind force that decays after the fan stops, and the masses of both dominoes</span></div>
-      <div><strong>10.1&nbsp;&plusmn;&nbsp;2.3&nbsp;cm</strong><span>the green domino's slide its model predicts, knocked in by the gray one stood upwind</span></div>
-      <div><strong>9.9&nbsp;cm</strong><span>the measured slide, with the green domino flat in the patch</span></div>
-    </div>
-    <p class="body-text">Its model predicts that no placement of the green domino alone reaches the new patch, so the agent stands the gray domino upwind, where its fall knocks the green one in.</p>
+    <p class="body-text">From two gusts, EMPIRIC learns a wind force that decays after the fan stops and infers both masses. Its model predicts that no placement of the green domino alone reaches the new patch, so the agent stands the gray domino upwind, where its fall knocks the green one in.</p>
     <figure class="tab-player" id="robot-player">
       <div class="tab-player-top">
         <div class="player-tabs" role="group" aria-label="Part of the run">

@@ -30,7 +30,7 @@ Without a system ffmpeg, it uses the one bundled with the `imageio-ffmpeg` Pytho
 
 ## Paper
 
-The paper is [arXiv:2609.35047](https://arxiv.org/abs/2609.35047); `index.html` links it from the navigation bar, the Paper button and the BibTeX entry.
+The paper is [arXiv:2609.35047](https://arxiv.org/abs/2609.35047); `index.html` links it from the navigation bar and the BibTeX entry.
 
 ## Old address
 

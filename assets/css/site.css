@@ -91,24 +91,6 @@ sup { font-size: 0.68em; line-height: 0; }
 .affiliations { gap: 2px 16px; margin-top: 14px; font-size: 14px; color: var(--hero-muted); }
 .equal { margin-top: 6px; font-size: 14px; color: var(--hero-muted); }
 .hero-summary { margin-top: 26px; font-size: 18px; line-height: 1.65; color: var(--hero-ink); }
-.hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 30px; }
-.button {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 48px;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 650;
-  color: var(--hero);
-  background: #ffffff;
-  border: 1px solid #ffffff;
-}
-.button:hover { background: #ece6f8; text-decoration: none; }
-.button-note { font-size: 13px; font-weight: 500; color: #6a6480; }
-.button.ghost { color: var(--hero-ink); background: transparent; border-color: rgba(255, 255, 255, 0.45); }
-.button.ghost:hover { background: rgba(255, 255, 255, 0.08); }
 .player { display: grid; gap: 10px; }
 .player-tabs {
   display: flex;
@@ -400,6 +382,8 @@ pre.code {
   .hero-inner { padding-top: 32px; }
 }
 @media (max-width: 380px) {
+  .nav { gap: 12px; padding-inline: 16px; }
+  .nav-button { padding: 6px 9px; }
   /* The wordmark takes its own row, so the footer links wrap as one line. */
   .footer-inner span { flex-basis: 100%; }
   .hero-media .player-tabs button { padding: 0 4px; font-size: 12px; }
