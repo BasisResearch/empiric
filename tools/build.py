@@ -8,9 +8,7 @@ Sources:
 - One recorded EMPIRIC run per domain from the agent logs (--logs): the
   runs behind the paper's trajectory figures. Each run directory holds
   run.mp4, the harness's recording of every environment step, and
-  agent/sandbox/simulator.py, the program the agent wrote. The hero
-  player shows the scene of each run's test task, cut from its video.
-
+  agent/sandbox/simulator.py, the program the agent wrote.
 - The real-robot Fan-Domino run (exp_20260922_134142) from the robot's
   logs (--real-robot): casc_explore.mp4 holds its two experiments and
   casc_test.mp4 its test, both cameras side by side.
@@ -23,7 +21,6 @@ between the <!-- code:NAME --> and <!-- /code:NAME --> markers, so the
 rest of index.html stays hand-edited.
 """
 import argparse
-import json
 import os
 import re
 import shutil
@@ -61,20 +58,7 @@ CYCLES = Path("/orcd/home/002/ycliang/predicators/logs/paper_run_videos_cycles")
 # The story videos, one per domain: make_story.py in ~/claude_sbatch/story
 # writes <domain>.mp4 (1080x1080, 20 fps, captions burned in).
 STORIES = Path("/home/ycliang/claude_sbatch/story/out")
-# Each recording is 1520x900: the 900x900 scene, then the harness panel.
-SCENE_CROP = "crop=900:900:0:0"
 END_TRIM = 0.3  # the last frames repeat the final state
-# The hero player shows each run's test task, the run's last level. The
-# panel opens every level with a banner, a coloured box at its foot
-# (predicators' continual_video.render_panel); this patch samples it.
-BANNER_PATCH = (8, 6, 928, 864)  # width, height, x, y
-PANEL_COLORS = {
-    "level": (110, 170, 255),  # a level opens
-    "won": (90, 200, 120),
-    "over": (235, 90, 90),
-    "reset": (245, 180, 70),
-    "none": (24, 24, 30),  # the panel background: no banner
-}
 
 FIGURES = {
     "fig1_residual.pdf": "teaser",
@@ -106,10 +90,6 @@ ROBOT_CLIPS = {
     "robot-experiment-2": ("casc_explore.mp4", 55.3, None),
     "robot-test": ("casc_test.mp4", 0.0, None),
 }
-# The hero player's real-robot clip: the test from the side camera (the
-# left half of casc_test.mp4), cropped square around the blocks, the
-# patch and the arm.
-ROBOT_HERO_CROP = "crop=540:540:120:0"
 # Bridge program excerpts: (first line, last line), 1-based and inclusive.
 EXCERPT = [(1, 21), (112, 139), (210, 241)]
 
@@ -167,51 +147,13 @@ def build_robot(paper, out):
     print(f"robot: {len(ROBOT)} photos")
 
 
-def banner_runs(ff, video):
-    """Each run of banner frames in a run video as (kind, first, last),
-    with the video's frame count."""
-    w, h, x, y = BANNER_PATCH
-    raw = subprocess.run([ff, "-v", "error", "-i", str(video), "-vf",
-                          f"crop={w}:{h}:{x}:{y}", "-f", "rawvideo",
-                          "-pix_fmt", "rgb24", "-"],
-                         capture_output=True, check=True).stdout
-    size = w * h * 3
-    kinds = []
-    for k in range(0, len(raw), size):
-        patch = raw[k:k + size]
-        mean = [sum(patch[c::3]) / (w * h) for c in range(3)]
-        kinds.append(min(PANEL_COLORS, key=lambda kind, m=mean: sum(
-            abs(a - b) for a, b in zip(m, PANEL_COLORS[kind]))))
-    runs = []
-    start = 0
-    for i in range(1, len(kinds) + 1):
-        if i == len(kinds) or kinds[i] != kinds[start]:
-            if kinds[start] != "none":
-                runs.append((kinds[start], start, i - 1))
-            start = i
-    return runs, len(kinds)
-
-
-def test_task_start(ff, video, run_dir):
-    """The frame where a run video's test task opens (its last level's
-    banner), checked against the run's scorecard."""
-    card = json.loads((run_dir / "scorecard.json").read_text())
-    levels = [level for level in card["levels"] if level["attempted"]]
-    runs, total = banner_runs(ff, video)
-    starts = [first for kind, first, _ in runs if kind == "level"]
-    assert len(starts) == len(levels), (video, runs)
-    assert levels[-1]["split"] == "test", run_dir
-    return starts[-1], total
-
-
 def video_source(cycles, name):
     """The run video the page shows for a domain."""
     return cycles / name / f"{name}.mp4"
 
 
-def build_videos(ff, logs, cycles, out):
-    """Copy each run video for streaming, with a poster, and cut its test
-    task's scene for the hero player."""
+def build_videos(ff, cycles, out):
+    """Copy each run video for streaming, with a poster."""
     out.mkdir(parents=True, exist_ok=True)
     for name in RUNS:
         src = video_source(cycles, name)
@@ -225,20 +167,7 @@ def build_videos(ff, logs, cycles, out):
         poster = Image.open(out / f"{name}.png").convert("RGB")
         poster.save(out / f"{name}.webp", quality=80, method=6)
         (out / f"{name}.png").unlink()
-        first, total = test_task_start(ff, src, logs / RUNS[name])
-        clip = out / f"test-{name}.mp4"
-        run([ff, "-v", "error", "-y", "-i", str(src), "-vf",
-             f"trim=start_frame={first},setpts=PTS-STARTPTS,{SCENE_CROP},"
-             "fps=20",
-             "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "26",
-             "-pix_fmt", "yuv420p", "-movflags", "+faststart", str(clip)])
-        run([ff, "-v", "error", "-y", "-i", str(clip), "-frames:v", "1",
-             str(out / f"test-{name}.png")])
-        poster = Image.open(out / f"test-{name}.png").convert("RGB")
-        poster.save(out / f"test-{name}.webp", quality=80, method=6)
-        (out / f"test-{name}.png").unlink()
-        print(f"video {name}: {length:.1f} s, test task from frame {first} "
-              f"of {total} ({(total - first) / 20:.1f} s)")
+        print(f"video {name}: {length:.1f} s")
 
 
 def build_stories(ff, stories, out):
@@ -260,8 +189,8 @@ def build_stories(ff, stories, out):
 
 
 def build_robot_videos(ff, real_robot, out):
-    """Cut the real-robot run into its experiments and test, with posters,
-    and the test's square clip for the hero player."""
+    """Cut the real-robot run into its experiments and test, with
+    posters."""
     out.mkdir(parents=True, exist_ok=True)
     for name, (source, start, end) in ROBOT_CLIPS.items():
         src = real_robot / source
@@ -277,17 +206,6 @@ def build_robot_videos(ff, real_robot, out):
         poster.save(out / f"{name}.webp", quality=80, method=6)
         (out / f"{name}.png").unlink()
         print(f"robot video {name}: {stop - start:.1f} s")
-    clip = out / "test-robot.mp4"
-    run([ff, "-v", "error", "-y", "-i", str(real_robot / "casc_test.mp4"),
-         "-vf", ROBOT_HERO_CROP, "-an", "-c:v", "libx264", "-preset", "slow",
-         "-crf", "24", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-         str(clip)])
-    run([ff, "-v", "error", "-y", "-i", str(clip), "-frames:v", "1",
-         str(out / "test-robot.png")])
-    poster = Image.open(out / "test-robot.png").convert("RGB")
-    poster.save(out / "test-robot.webp", quality=80, method=6)
-    (out / "test-robot.png").unlink()
-    print(f"robot video test-robot: {duration(ff, clip):.1f} s")
 
 
 def code_html(lines, start):
@@ -338,8 +256,7 @@ def main():
     steps = {
         "figures": lambda: build_figures(args.paper, SITE / "assets" / "img"),
         "robot": lambda: build_robot(args.paper, SITE / "assets" / "img" / "robot"),
-        "videos": lambda: build_videos(ffmpeg_path(args.ffmpeg), args.logs,
-                                       args.cycles,
+        "videos": lambda: build_videos(ffmpeg_path(args.ffmpeg), args.cycles,
                                        SITE / "assets" / "video"),
         "stories": lambda: build_stories(ffmpeg_path(args.ffmpeg),
                                          args.stories,
